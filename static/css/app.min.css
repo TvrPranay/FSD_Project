@@ -1,0 +1,57 @@
+/* ID-PAY Minimal CSS Overrides - Bootstrap First */
+
+/* Colors */
+:root {
+  --idpay-dark: #111110;
+  --idpay-muted: #7a7a72;
+  --idpay-bg: #f5f4f0;
+  --idpay-border: #ddddd8;
+  --idpay-green: #2d6a4f;
+  --idpay-red: #c0392b;
+}
+
+/* Global */
+body { 
+  background-color: var(--idpay-bg);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Typography */
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
+.btn { font-weight: 500; }
+
+/* Cards */
+.card { 
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border: 1px solid var(--idpay-border);
+}
+
+/* Forms */
+.form-control:focus {
+  border-color: var(--idpay-dark);
+  box-shadow: 0 0 0 0.2rem rgba(17,17,16,0.1);
+}
+
+/* Navbar */
+.navbar-brand { font-weight: 600; letter-spacing: -0.01em; }
+
+/* Sidebar */
+.sidebar-link:hover { background-color: var(--idpay-bg) !important; }
+
+/* Balance */
+.balance-lg { 
+  font-family: 'DM Mono', monospace; 
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* Status */
+.badge-success { background-color: var(--idpay-green-light); color: var(--idpay-green); }
+.badge-danger { background-color: var(--idpay-red-light); color: var(--idpay-red); }
+
+/* Utilities */
+.text-muted { color: var(--idpay-muted) !important; }
+.border-light { border-color: var(--idpay-border) !important; }
+
+/* Responsive spacing */
+@media (max-width: 768px) { .container { padding-left: 16px; padding-right: 16px; } }

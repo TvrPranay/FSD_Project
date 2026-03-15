@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID-PAY — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #f0ede6;
+            --white: #ffffff;
+            --dark: #111110;
+            --muted: #7a7a72;
+            --border: #ddddd5;
+            --sidebar-w: 200px;
+            --nav-h: 56px;
+            --red: #c0392b;
+            --green: #2d6a4f;
+            --accent: #111110;
+            --card-bg: #ffffff;
+            --card-radius: 14px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--dark);
+            min-height: 100vh;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* ─── TOPBAR ─── */
+        .topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--nav-h);
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+        .menu-toggle {
+            width: 30px; height: 30px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: none;
+            cursor: pointer;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 4px;
+        }
+        .menu-toggle span { display: block; width: 13px; height: 1.5px; background: var(--dark); border-radius: 2px; }
+        .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; }
+        .brand-icon {
+            width: 28px; height: 28px;
+            background: var(--dark); color: white;
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 6px; }
+        .nav-btn {
+            height: 32px; padding: 0 14px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: none; font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer; color: var(--dark);
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.15s;
+        }
+        .nav-btn:hover, .nav-btn.active { background: var(--dark); color: white; border-color: var(--dark); }
+        .bell-btn { position: relative; }
+        .bell-badge {
+            position: absolute; top: -5px; right: -5px;
+            width: 17px; height: 17px;
+            background: var(--red); border-radius: 50%;
+            font-size: 9px; color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; border: 2px solid white;
+        }
+        .notif-dropdown {
+            position: absolute; top: 44px; right: 0;
+            width: 270px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            display: none; z-index: 200; overflow: hidden;
+        }
+        .notif-dropdown.open { display: block; }
+        .notif-item { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item:hover { background: var(--bg); }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            position: fixed;
+            top: var(--nav-h); left: 0; bottom: 0;
+            width: var(--sidebar-w);
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            padding: 14px 10px;
+            display: flex; flex-direction: column;
+            z-index: 99;
+            transform: translateX(0);
+            transition: transform 0.25s ease;
+        }
+        .sidebar.hidden { transform: translateX(calc(-1 * var(--sidebar-w))); }
+        .sidebar-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            font-size: 13px; font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            border: none; background: none;
+            width: 100%; text-align: left;
+            margin-bottom: 2px;
+        }
+        .sidebar-link:hover, .sidebar-link.active { background: var(--bg); color: var(--dark); }
+        .sidebar-link svg { flex-shrink: 0; }
+        .sidebar-divider { height: 1px; background: var(--border); margin: 10px 0; }
+        .sidebar-logout { margin-top: auto; }
+
+        /* ─── MAIN ─── */
+        .main {
+            padding-top: calc(var(--nav-h) + 20px);
+            padding-left: calc(var(--sidebar-w) + 20px);
+            padding-right: 20px;
+            padding-bottom: 40px;
+            transition: padding-left 0.25s ease;
+        }
+        .main.full { padding-left: 20px; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .page-title { font-size: 22px; font-weight: 700; margin-bottom: 18px; letter-spacing: -0.3px; }
+
+        /* ─── CARDS ─── */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+        }
+        .card-label {
+            font-size: 11px; color: var(--muted);
+            font-weight: 600; margin-bottom: 6px;
+            text-transform: uppercase; letter-spacing: 0.6px;
+        }
+        .balance-amount {
+            font-size: 36px; font-weight: 700;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: -1px;
+        }
+
+        /* ─── BALANCE CHART CARD ─── */
+        .balance-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+        .balance-sparkline { height: 80px; max-height: 80px; margin-top: 8px; display: block; width: 100% !important; }
+
+        /* ─── ANALYTICS CARD ─── */
+        .analytics-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+        }
+        .analytics-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .analytics-title { font-size: 14px; font-weight: 600; }
+        .chart-toggle-btn {
+            font-size: 12px; padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px; background: none;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+            color: var(--muted);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .analytics-bottom {
+            display: flex; gap: 16px; margin-top: 14px;
+        }
+        .analytics-stat { flex: 1; }
+        .analytics-stat .label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+        .analytics-stat .value { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -0.5px; }
+        .top-categories { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .cat-chip {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .cat-chip:hover { background: var(--dark); }
+
+        /* ─── QUICK SEND ─── */
+        .quick-send-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+        }
+        .qs-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .qs-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+        .qs-arrow { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .contacts-row { display: flex; gap: 16px; overflow: hidden; }
+        .contact-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; min-width: 70px; }
+        .contact-avatar {
+            width: 56px; height: 56px;
+            border-radius: 50%; overflow: hidden;
+            border: 2px solid var(--border);
+            transition: border-color 0.15s;
+        }
+        .contact-avatar:hover { border-color: var(--dark); }
+        .contact-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .contact-name { font-size: 12px; font-weight: 500; color: var(--dark); text-align: center; }
+        .qs-dots { display: flex; gap: 6px; margin-top: 14px; justify-content: center; }
+        .qs-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); cursor: pointer; }
+        .qs-dot.active { background: var(--dark); }
+
+        /* ─── REWARDS PANEL ─── */
+        .rewards-panel {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+        }
+        .rewards-header { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+        .rewards-top { display: flex; gap: 10px; margin-bottom: 14px; }
+        .reward-stat-card {
+            flex: 1;
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .reward-stat-icon { font-size: 20px; }
+        .reward-stat-label { font-size: 11px; color: var(--muted); font-weight: 500; }
+        .reward-stat-val { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; }
+        .voucher-dark {
+            background: var(--dark); color: white;
+            border-radius: 10px; padding: 12px 14px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .voucher-dark .reward-stat-label { color: rgba(255,255,255,0.6); }
+        .voucher-dark .reward-stat-val { color: white; }
+
+        .offers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .offer-card {
+            border-radius: 10px; overflow: hidden;
+            border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 0;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .offer-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .offer-logo {
+            width: 52px; height: 52px;
+            object-fit: cover; flex-shrink: 0;
+        }
+        .offer-info { padding: 8px 10px; }
+        .offer-discount { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
+        .offer-brand { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+        /* ─── TOP UP + TAP TO PAY ─── */
+        .topup-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+        }
+        .taptopay-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+        }
+
+        /* ─── TRANSACTIONS ─── */
+        .txn-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+        }
+        .txn-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .txn-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+        .txn-toggle { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px; background: none; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+
+        /* ─── TABLES ─── */
+        table { width: 100%; border-collapse: collapse; }
+        th { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+        td { font-size: 13px; padding: 10px 10px; border-bottom: 1px solid var(--border); color: var(--dark); }
+        tr:last-child td { border-bottom: none; }
+
+        /* ─── FORM FIELDS ─── */
+        .field { margin-bottom: 12px; }
+        .field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .field input, .field select, .field textarea {
+            width: 100%; padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px; font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg); color: var(--dark);
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--dark); background: var(--white); }
+        .field textarea { resize: vertical; min-height: 72px; }
+
+        /* ─── BUTTONS ─── */
+        .btn-primary {
+            width: 100%; padding: 10px;
+            background: var(--dark); color: white;
+            border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer; transition: opacity 0.15s;
+        }
+        .btn-primary:hover { opacity: 0.85; }
+        .btn-outline {
+            width: 100%; padding: 9px;
+            background: none; color: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 8px; font-size: 13px;
+            font-weight: 500; font-family: 'DM Sans', sans-serif;
+            cursor: pointer; transition: background 0.15s;
+            margin-top: 8px;
+        }
+        .btn-outline:hover { background: var(--bg); }
+
+        /* ─── BADGES ─── */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-green { background: #e9f5ef; color: var(--green); }
+        .badge-red { background: #fdf0ee; color: var(--red); }
+        .badge-gray { background: #f0f0ee; color: var(--muted); }
+
+        /* ─── PAY METHOD TABS ─── */
+        .pay-method-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+        .tab-btn { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: 'DM Sans', sans-serif; background: none; cursor: pointer; color: var(--muted); font-weight: 500; }
+        .tab-btn.active { background: var(--dark); color: white; border-color: var(--dark); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ─── TOAST ─── */
+        .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+        .toast { background: var(--dark); color: white; padding: 11px 16px; border-radius: 8px; font-size: 13px; max-width: 300px; animation: slideIn 0.2s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* ─── CHATBOT ─── */
+        .chatbot-btn {
+            position: fixed; bottom: 24px; right: 24px;
+            width: 46px; height: 46px;
+            background: var(--dark); color: white;
+            border: none; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            z-index: 300; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+            transition: transform 0.15s;
+        }
+        .chatbot-btn:hover { transform: scale(1.05); }
+        .chatbot-box {
+            position: fixed; right: 24px; bottom: 82px;
+            width: 320px; height: 420px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            display: none; flex-direction: column;
+            z-index: 300;
+        }
+        .chatbot-box.open { display: flex; }
+        .chatbot-head { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .chatbot-head button { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--muted); line-height: 1; }
+        .chatbot-msgs { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { max-width: 80%; padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.45; }
+        .msg.bot { background: var(--bg); align-self: flex-start; }
+        .msg.user { background: var(--dark); color: white; align-self: flex-end; }
+        .chatbot-input-row { padding: 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+        .chatbot-input-row input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; background: var(--bg); }
+        .chatbot-input-row input:focus { border-color: var(--dark); background: white; }
+        .chatbot-input-row button { padding: 8px 14px; background: var(--dark); color: white; border: none; border-radius: 7px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+
+        /* ─── MSG BOX ─── */
+        .msg-box { font-size: 13px; padding: 10px 14px; border-radius: 7px; margin-top: 10px; display: none; }
+        .msg-box.success { background: #e9f5ef; color: var(--green); }
+        .msg-box.error { background: #fdf0ee; color: var(--red); }
+
+        /* ─── PROFILE ─── */
+        .profile-avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+        .profile-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .profile-row:last-child { border-bottom: none; }
+        .profile-row span:first-child { color: var(--muted); font-size: 12px; font-weight: 500; }
+        .edit-btn { font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .edit-btn:hover { background: var(--bg); color: var(--dark); }
+        .edit-input { display: none; padding: 5px 9px; border: 1px solid var(--border); border-radius: 5px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--dark); outline: none; }
+        .edit-input:focus { border-color: var(--dark); }
+
+        /* ─── VOUCHER ─── */
+        .voucher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .voucher-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+        .voucher-card:hover { background: var(--bg); border-color: var(--dark); }
+        .voucher-card strong { display: block; font-size: 13px; margin-bottom: 3px; }
+        .voucher-card span { font-size: 12px; color: var(--muted); }
+
+        /* ─── AMOUNT CHIPS ─── */
+        .amount-chip {
+            flex: 1; padding: 6px 4px;
+            border: 1px solid var(--border);
+            border-radius: 7px; font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg); cursor: pointer;
+            font-weight: 600; color: var(--muted);
+            transition: all 0.15s;
+        }
+        .amount-chip:hover, .amount-chip.active {
+            background: var(--dark); color: white; border-color: var(--dark);
+        }
+
+        /* ─── PAY METHOD PILLS ─── */
+        .pay-method-pill {
+            flex: 1; padding: 7px 6px;
+            border: 1px solid var(--border);
+            border-radius: 7px; font-size: 11px;
+            font-family: 'DM Sans', sans-serif;
+            background: none; cursor: pointer;
+            font-weight: 600; color: var(--muted);
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+            transition: all 0.15s;
+        }
+        .pay-method-pill:hover { background: var(--bg); color: var(--dark); }
+        .pay-method-pill.active { background: var(--dark); color: white; border-color: var(--dark); }
+
+        /* ─── CHART DROPDOWN ─── */
+        .chart-option {
+            padding: 9px 14px; font-size: 13px;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+            transition: background 0.1s;
+        }
+        .chart-option:hover { background: var(--bg); }
+
+        /* ─── PAYMENT GATEWAY CARDS ─── */
+        .pay-gateway-card {
+            background: var(--white);
+            border: 2px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px 16px;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+            text-align: center;
+        }
+        .pay-gateway-card:hover { border-color: var(--dark); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+        .pay-gateway-card.selected { border-color: var(--dark); background: #fafaf8; }
+        .gw-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+        .gw-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+        .gw-sub { font-size: 11px; color: var(--muted); }
+
+        /* ─── GATEWAY FORM ─── */
+        .gw-form { background: var(--white); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 18px; }
+        .gw-form-header { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer; color: var(--muted); margin-bottom: 16px; transition: color 0.15s; }
+        .gw-form-header:hover { color: var(--dark); }
+
+        /* ─── UPI APP BUTTONS ─── */
+        .upi-app-btn { display: flex; flex-direction: column; align-items: center; padding: 8px 10px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+        .upi-app-btn:hover { background: var(--bg); }
+        .upi-app-btn.active { border-color: var(--dark); background: var(--bg); }
+
+        /* ─── BANK CARD ─── */
+        .bank-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px 6px; text-align: center; cursor: pointer; transition: all 0.15s; font-size: 11px; font-weight: 600; }
+        .bank-card:hover, .bank-card.selected { border-color: var(--dark); background: var(--bg); }
+        .bank-card .bank-logo { width: 34px; height: 34px; border-radius: 8px; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: white; }
+        .bank-search-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .bank-search-item:last-child { border-bottom: none; }
+        .bank-search-item:hover { background: var(--bg); }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+            .sidebar.open { transform: translateX(0); }
+            .main { padding-left: 16px; padding-right: 16px; }
+            .topbar { padding: 0 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+    <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="brand">
+            <div class="brand-icon">ID</div>
+            ID-PAY
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="nav-btn active" onclick="showSection('home')">Home</button>
+        <button class="nav-btn" onclick="showSection('profile')">Profile</button>
+        <button class="nav-btn" onclick="showSection('support')">Support</button>
+        <div style="position:relative;">
+            <button class="nav-btn bell-btn" id="bellBtn" onclick="toggleNotifDropdown()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                <span class="bell-badge" id="bellBadge">6</span>
+            </button>
+            <div class="notif-dropdown" id="notifDropdown">
+                <div class="notif-item" style="color:var(--muted);font-size:12px;">No new notifications</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+    <button class="sidebar-link active" id="link-home" onclick="showSection('home')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg>
+        Home
+    </button>
+    <button class="sidebar-link" id="link-profile" onclick="showSection('profile')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
+        Profile
+    </button>
+    <button class="sidebar-link" id="link-contacts" onclick="showSection('contacts')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Contacts
+    </button>
+    <button class="sidebar-link" id="link-tickets" onclick="showSection('tickets')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+        Ticket History
+    </button>
+    <button class="sidebar-link" id="link-security" onclick="showSection('security')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Security Center
+    </button>
+    <div class="sidebar-divider"></div>
+    <button class="sidebar-link" id="link-support" onclick="showSection('support')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        Support
+    </button>
+    <div class="sidebar-divider"></div>
+    <a class="sidebar-link sidebar-logout" href="/logout">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Logout
+    </a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main" id="main">
+
+    <!-- HOME -->
+    <section class="section active" id="sec-home">
+        <div class="page-title">Welcome back, {{ name }}</div>
+
+        <!-- Row 1: Balance | Analytics | Rewards -->
+        <div class="row g-3 mb-3">
+
+            <!-- Balance Card -->
+            <div class="col-md-3">
+                <div class="balance-card" style="height:100%;">
+                    <div class="card-label">Available Balance</div>
+                    <div class="balance-amount" id="balanceDisplay">₹0.00</div>
+                    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+                        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
+                            <span>This month</span>
+                            <span id="monthlyChange" style="color:var(--green);font-weight:600;">—</span>
+                        </div>
+                        <div style="font-size:13px;font-weight:500;"><span id="totalCredited">₹0.00</span> <span style="font-size:11px;color:var(--muted);font-weight:400;">total credited</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Analytics -->
+            <div class="col-md-5">
+                <div class="analytics-card" style="height:100%;">
+                    <div class="analytics-header">
+                        <div class="analytics-title">PAYMENT ANALYTICS</div>
+                        <div style="position:relative;">
+                            <button class="chart-toggle-btn" id="chartDropBtn" onclick="toggleChartDropdown()">
+                                <span id="chartLabel">Bar chart</span>
+                                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div id="chartDropdown" style="display:none;position:absolute;top:36px;right:0;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.10);z-index:50;min-width:130px;overflow:hidden;">
+                                <div class="chart-option" onclick="selectChart('bar','Bar chart')">📊 Bar chart</div>
+                                <div class="chart-option" onclick="selectChart('line','Line chart')">📈 Line chart</div>
+                                <div class="chart-option" onclick="selectChart('doughnut','Donut chart')">🍩 Donut chart</div>
+                                <div class="chart-option" onclick="selectChart('radar','Radar chart')">🕸️ Radar chart</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Legend -->
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;gap:14px;" id="chartLegend">
+                        <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#111;border-radius:2px;display:inline-block;"></span> Expense</span>
+                        <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#bbb;border-radius:2px;display:inline-block;"></span> Income</span>
+                    </div>
+                    <!-- Chart + Stats side by side -->
+                    <div style="display:flex;gap:16px;align-items:flex-start;">
+                        <div style="flex:1;position:relative;height:140px;">
+                            <canvas id="analyticsChart"></canvas>
+                        </div>
+                        <div style="flex-shrink:0;width:130px;">
+                            <div style="margin-bottom:14px;">
+                                <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Monthly Expense</div>
+                                <div style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-0.5px;" id="monthlyExpense">₹0.00</div>
+                            </div>
+                            <div>
+                                <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Top Categories</div>
+                                <div class="top-categories">
+                                    <div class="cat-chip" title="Shopping">🛍️</div>
+                                    <div class="cat-chip" title="Tools">🔧</div>
+                                    <div class="cat-chip" title="Security">🛡️</div>
+                                    <div class="cat-chip" title="Home">🏠</div>
+                                    <div class="cat-chip" title="Transport">🚗</div>
+                                    <div class="cat-chip" title="Finance">💰</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rewards & Offers -->
+            <div class="col-md-4">
+                <div class="rewards-panel" style="height:100%;">
+                    <div class="rewards-header">REWARDS & FEATURED OFFERS</div>
+                    <div class="rewards-top">
+                        <div class="reward-stat-card">
+                            <div class="reward-stat-icon">🎁</div>
+                            <div>
+                                <div class="reward-stat-label">Points balance</div>
+                                <div class="reward-stat-val" id="rewardPoints">0</div>
+                                <div style="font-size:10px;color:var(--muted);">Points balance</div>
+                            </div>
+                        </div>
+                        <div class="voucher-dark">
+                            <div style="font-size:18px;">🏷️</div>
+                            <div>
+                                <div class="reward-stat-label">Available vouchers</div>
+                                <div class="reward-stat-val">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="offers-grid">
+                        <div class="offer-card">
+                            <div style="width:52px;height:52px;background:#e8002d;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <span style="color:white;font-weight:800;font-size:13px;">zomato</span>
+                            </div>
+                            <div class="offer-info">
+                                <div class="offer-discount">20% OFF</div>
+                                <div class="offer-brand">Zomato</div>
+                            </div>
+                        </div>
+                        <div class="offer-card">
+                            <div style="width:52px;height:52px;background:#131921;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <span style="color:#ff9900;font-weight:800;font-size:11px;">amazon</span>
+                            </div>
+                            <div class="offer-info">
+                                <div class="offer-discount">10% OFF</div>
+                                <div class="offer-brand">Amazon</div>
+                            </div>
+                        </div>
+                        <div class="offer-card">
+                            <div style="width:52px;height:52px;background:#f0a500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <span style="font-size:22px;">🍗</span>
+                            </div>
+                            <div class="offer-info">
+                                <div class="offer-discount">10% OFF</div>
+                                <div class="offer-brand">Brand Discount</div>
+                            </div>
+                        </div>
+                        <div class="offer-card">
+                            <div style="width:52px;height:52px;background:#8b4513;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <span style="font-size:22px;">🥐</span>
+                            </div>
+                            <div class="offer-info">
+                                <div class="offer-discount">10% OFF</div>
+                                <div class="offer-brand">Brand Discount</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Quick Send | Top Up | Tap to Pay -->
+        <div class="row g-3 mb-3">
+
+            <!-- Quick Send -->
+            <div class="col-md-5">
+                <div class="quick-send-card">
+                    <div class="qs-header">
+                        <div class="qs-title">QUICK SEND</div>
+                        <button class="qs-arrow" onclick="nextContacts()">›</button>
+                    </div>
+                    <div class="contacts-row" id="contactsRow">
+                        <div class="contact-item" onclick="quickSend('Dummy')">
+                            <div class="contact-avatar">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Dummy&backgroundColor=b6e3f4" alt="Dummy">
+                            </div>
+                            <div class="contact-name">Dummy</div>
+                        </div>
+                        <div class="contact-item" onclick="quickSend('2ama')">
+                            <div class="contact-avatar">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ama&backgroundColor=ffd5dc" alt="2ama">
+                            </div>
+                            <div class="contact-name">2ama</div>
+                        </div>
+                        <div class="contact-item" onclick="quickSend('Samarth')">
+                            <div class="contact-avatar">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Samarth&backgroundColor=c0aede" alt="Samarth">
+                            </div>
+                            <div class="contact-name">Samarth</div>
+                        </div>
+                        <div class="contact-item" onclick="quickSend('Komal')">
+                            <div class="contact-avatar">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Komal&backgroundColor=d1f4cc" alt="Komal">
+                            </div>
+                            <div class="contact-name">Komal...</div>
+                        </div>
+                        <div class="contact-item" onclick="quickSend('Rohan')">
+                            <div class="contact-avatar">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan&backgroundColor=ffdfbf" alt="Rohan">
+                            </div>
+                            <div class="contact-name">Rohan...</div>
+                        </div>
+                    </div>
+                    <div class="qs-dots">
+                        <div class="qs-dot active"></div>
+                        <div class="qs-dot"></div>
+                        <div class="qs-dot"></div>
+                        <div class="qs-dot"></div>
+                        <div class="qs-dot"></div>
+                    </div>
+                </div>
+
+                <!-- Split Bill Card -->
+                <div class="quick-send-card" style="margin-top:12px;">
+                    <div class="qs-header">
+                        <div class="qs-title" style="display:flex;align-items:center;gap:7px;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75M9 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
+                            SPLIT BILL
+                        </div>
+                        <button class="edit-btn" onclick="toggleSplitBill()">+ New split</button>
+                    </div>
+                    <div id="splitBillPanel" style="display:none;margin-top:4px;">
+                        <div class="field">
+                            <label>Total Bill Amount</label>
+                            <div style="position:relative;">
+                                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);">₹</span>
+                                <input type="number" id="splitTotal" placeholder="0.00" style="padding-left:28px;" oninput="recalcSplit()">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Split between (people)</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <button onclick="changeSplitCount(-1)" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">−</button>
+                                <span id="splitCount" style="font-size:16px;font-weight:700;min-width:20px;text-align:center;">2</span>
+                                <button onclick="changeSplitCount(1)" style="width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">+</button>
+                                <span style="font-size:12px;color:var(--muted);">people</span>
+                            </div>
+                        </div>
+                        <div id="splitResult" style="background:var(--bg);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:10px;display:none;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="color:var(--muted);">Each person pays</span>
+                                <span id="splitPerPerson" style="font-weight:700;font-size:16px;font-family:'DM Mono',monospace;"></span>
+                            </div>
+                        </div>
+                        <div id="splitPeopleList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+                        <button class="btn-primary" onclick="sendSplitRequests()" style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+                            Send Split Requests
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Up Wallet -->
+            <div class="col-md-4">
+                <div class="topup-card">
+                    <div class="card-label" style="margin-bottom:14px;">TOP UP WALLET</div>
+
+                    <!-- Quick amount chips -->
+                    <div style="display:flex;gap:6px;margin-bottom:12px;" id="quickAmounts">
+                        <button class="amount-chip" onclick="setAmount(100)">₹100</button>
+                        <button class="amount-chip" onclick="setAmount(500)">₹500</button>
+                        <button class="amount-chip" onclick="setAmount(1000)">₹1000</button>
+                        <button class="amount-chip" onclick="setAmount(2000)">₹2000</button>
+                    </div>
+
+                    <div class="field">
+                        <label>Amount</label>
+                        <div style="position:relative;">
+                            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:600;color:var(--muted);">₹</span>
+                            <input type="number" id="topupAmount" placeholder="0.00" style="padding-left:28px;">
+                        </div>
+                    </div>
+
+                    <!-- Payment method row -->
+                    <div style="display:flex;gap:8px;margin-bottom:14px;">
+                        <button class="pay-method-pill active" id="pm-upi" onclick="selectPayMethod('upi')">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            UPI
+                        </button>
+                        <button class="pay-method-pill" id="pm-card" onclick="selectPayMethod('card')">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+                            Card
+                        </button>
+                        <button class="pay-method-pill" id="pm-netbank" onclick="selectPayMethod('netbank')">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 10v11M12 10v11M16 10v11"/></svg>
+                            Net Banking
+                        </button>
+                    </div>
+
+                    <button class="btn-primary" onclick="goToPayment()" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                        Add Money
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tap to Pay -->
+            <div class="col-md-3">
+                <div class="taptopay-card" style="height:100%;display:flex;flex-direction:column;">
+                    <div class="card-label" style="margin-bottom:12px;">TAP TO PAY (ID SCAN)</div>
+                    <div style="flex:1;"></div>
+                    <button class="btn-primary" onclick="startIdScan()" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9V4a1 1 0 011-1h5M3 15v5a1 1 0 001 1h5m10-16h5a1 1 0 011 1v5m-1 5v5a1 1 0 01-1 1h-5"/></svg>
+                        Scan ID Card
+                    </button>
+                    <div id="idScanResult" style="display:none;margin-top:12px;">
+                        <div class="field"><label>ID Number</label><input type="text" id="detectedId" readonly></div>
+                        <div class="field"><label>Name</label><input type="text" id="recipientName" readonly></div>
+                        <div class="field"><label>Amount (₹)</label><input type="number" id="idPayAmount"></div>
+                        <button class="btn-primary" onclick="payWithIdPin()">Pay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Recent Transactions -->
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="txn-card">
+                    <div class="txn-header">
+                        <div class="txn-title">RECENT TRANSACTIONS</div>
+                        <button class="txn-toggle" onclick="toggleTxn()">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></svg>
+                        </button>
+                    </div>
+                    <div id="txnTableWrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTxBody"><tr><td colspan="3" style="color:var(--muted);text-align:center;padding:16px;">No transactions yet</td></tr></tbody>
+                        </table>
+                        <button class="btn-outline" onclick="showSection('transactions')">View all transactions</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PAYMENT - Fully Functional -->
+    <section class="section" id="sec-payment">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+            <button onclick="showSection('home')" style="width:32px;height:32px;border:1px solid var(--border);border-radius:7px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            </button>
+            <div>
+                <div class="page-title" style="margin-bottom:0;">Add Money</div>
+                <div style="font-size:13px;color:var(--muted);">Wallet top-up — <span id="payAmountLabel" style="font-weight:700;color:var(--dark);font-family:'DM Mono',monospace;">₹0.00</span></div>
+            </div>
+        </div>
+        <div class="row g-4">
+            <!-- LEFT: Method selector + forms -->
+            <div class="col-md-7">
+                <!-- Method Grid -->
+                <div id="methodGrid">
+                    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Choose Payment Method</div>
+                    <div class="row g-3">
+                        <div class="col-6"><div class="pay-gateway-card" onclick="selectGateway('upi')">
+                            <div class="gw-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);"><svg width="22" height="22" fill="white" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+                            <div class="gw-name">UPI</div><div class="gw-sub">GPay, PhonePe, Paytm</div>
+                            <div style="margin-top:8px;"><span class="badge badge-green">Recommended</span></div>
+                        </div></div>
+                        <div class="col-6"><div class="pay-gateway-card" onclick="selectGateway('qr')">
+                            <div class="gw-icon" style="background:linear-gradient(135deg,#10b981,#059669);"><svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M17 20h3M20 17v3"/></svg></div>
+                            <div class="gw-name">QR Code</div><div class="gw-sub">Scan & Pay instantly</div>
+                            <div style="margin-top:8px;"><span class="badge badge-gray">Any UPI app</span></div>
+                        </div></div>
+                        <div class="col-6"><div class="pay-gateway-card" onclick="selectGateway('card')">
+                            <div class="gw-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);"><svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></div>
+                            <div class="gw-name">Debit / Credit Card</div><div class="gw-sub">Visa · Mastercard · RuPay</div>
+                            <div style="margin-top:8px;"><span class="badge badge-gray">Secure</span></div>
+                        </div></div>
+                        <div class="col-6"><div class="pay-gateway-card" onclick="selectGateway('netbank')">
+                            <div class="gw-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 10v11M12 10v11M16 10v11"/></svg></div>
+                            <div class="gw-name">Net Banking</div><div class="gw-sub">50+ Indian banks</div>
+                            <div style="margin-top:8px;"><span class="badge badge-gray">All Banks</span></div>
+                        </div></div>
+                    </div>
+                </div>
+
+                <!-- UPI Form -->
+                <div id="form-upi" class="gw-form" style="display:none;">
+                    <div class="gw-form-header" onclick="backToGrid()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> UPI Payment</div>
+                    <div style="display:flex;gap:10px;margin-bottom:16px;">
+                        <div class="upi-app-btn active" onclick="selectUpiApp(this,'GPay')"><div style="width:36px;height:36px;background:white;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.12);font-size:14px;font-weight:800;color:#4285f4;">G</div><div style="font-size:11px;font-weight:600;margin-top:4px;">GPay</div></div>
+                        <div class="upi-app-btn" onclick="selectUpiApp(this,'PhonePe')"><div style="width:36px;height:36px;background:#5f259f;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;">Pe</div><div style="font-size:11px;font-weight:600;margin-top:4px;">PhonePe</div></div>
+                        <div class="upi-app-btn" onclick="selectUpiApp(this,'Paytm')"><div style="width:36px;height:36px;background:#00baf2;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:800;">Pay</div><div style="font-size:11px;font-weight:600;margin-top:4px;">Paytm</div></div>
+                        <div class="upi-app-btn" onclick="selectUpiApp(this,'Other UPI')"><div style="width:36px;height:36px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);font-size:18px;">+</div><div style="font-size:11px;font-weight:600;margin-top:4px;">Other</div></div>
+                    </div>
+                    <div class="field">
+                        <label>UPI ID</label>
+                        <div style="position:relative;">
+                            <input type="text" id="upiIdInput" placeholder="yourname@okicici">
+                            <button onclick="verifyUPI()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:5px 10px;background:var(--dark);color:white;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;">Verify</button>
+                        </div>
+                    </div>
+                    <div id="upiVerified" style="display:none;background:#e9f5ef;color:var(--green);border-radius:7px;padding:8px 12px;font-size:12px;font-weight:600;margin-bottom:4px;">✓ Verified — <span id="upiVerifiedName">User</span></div>
+                </div>
+
+                <!-- QR Form -->
+                <div id="form-qr" class="gw-form" style="display:none;">
+                    <div class="gw-form-header" onclick="backToGrid()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> QR Code Payment</div>
+                    <div style="text-align:center;padding:10px 0 16px;">
+                        <div style="display:inline-block;padding:16px;background:white;border-radius:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.06);"><div id="qrcode" style="width:160px;height:160px;"></div></div>
+                        <div style="margin-top:12px;font-size:13px;color:var(--muted);">Scan with any UPI app · Amount auto-filled</div>
+                        <div style="margin-top:4px;font-size:16px;font-weight:700;font-family:'DM Mono',monospace;" id="qrAmountLabel">₹0.00</div>
+                    </div>
+                </div>
+
+                <!-- Card Form -->
+                <div id="form-card" class="gw-form" style="display:none;">
+                    <div class="gw-form-header" onclick="backToGrid()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Card Payment</div>
+                    <div id="cardPreview" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:14px;padding:20px 22px;color:white;margin-bottom:16px;position:relative;overflow:hidden;min-height:130px;">
+                        <div style="position:absolute;top:-20px;right:-20px;width:110px;height:110px;background:rgba(255,255,255,0.06);border-radius:50%;"></div>
+                        <div style="position:absolute;bottom:-30px;right:30px;width:150px;height:150px;background:rgba(255,255,255,0.04);border-radius:50%;"></div>
+                        <div style="font-size:10px;opacity:0.6;margin-bottom:18px;letter-spacing:2px;">DEBIT / CREDIT CARD</div>
+                        <div style="font-size:17px;font-family:'DM Mono',monospace;letter-spacing:3px;margin-bottom:18px;" id="cardPreviewNumber">•••• •••• •••• ••••</div>
+                        <div style="display:flex;justify-content:space-between;">
+                            <div><div style="font-size:9px;opacity:0.5;margin-bottom:2px;">CARD HOLDER</div><div style="font-size:12px;font-weight:600;" id="cardPreviewName">YOUR NAME</div></div>
+                            <div><div style="font-size:9px;opacity:0.5;margin-bottom:2px;">EXPIRES</div><div style="font-size:12px;" id="cardPreviewExpiry">MM/YY</div></div>
+                        </div>
+                    </div>
+                    <div class="field"><label>Card Number</label><input type="text" id="cardNumberInput" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCardNumber(this);updateCardPreview()"></div>
+                    <div style="display:flex;gap:10px;">
+                        <div class="field" style="flex:1;"><label>Card Holder Name</label><input type="text" id="cardNameInput" placeholder="As on card" oninput="updateCardPreview()"></div>
+                        <div class="field" style="width:90px;"><label>Expiry</label><input type="text" id="cardExpiryInput" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this);updateCardPreview()"></div>
+                        <div class="field" style="width:75px;"><label>CVV</label><input type="password" id="cvvInput" placeholder="•••" maxlength="3"></div>
+                    </div>
+                </div>
+
+                <!-- Net Banking Form -->
+                <div id="form-netbank" class="gw-form" style="display:none;">
+                    <div class="gw-form-header" onclick="backToGrid()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Net Banking</div>
+                    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:10px;">Popular Banks</div>
+                    <div id="bankGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;"></div>
+                    <div class="field">
+                        <label>Search all banks</label>
+                        <input type="text" id="bankSearch" placeholder="e.g. Kotak, Axis, HDFC..." oninput="filterBanks(this.value)">
+                    </div>
+                    <div id="bankSearchResults" style="display:none;background:white;border:1px solid var(--border);border-radius:8px;max-height:150px;overflow-y:auto;margin-top:-8px;"></div>
+                    <div id="selectedBankDisplay" style="display:none;background:#e9f5ef;border-radius:7px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--green);margin-top:8px;">✓ Selected: <span id="selectedBankName"></span></div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Summary + Confirm -->
+            <div class="col-md-5">
+                <div class="card" style="padding:22px;position:sticky;top:76px;">
+                    <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;">Payment Summary</div>
+                    <!-- Amount editor -->
+                    <div style="background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+                        <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Amount</div>
+                        <div style="display:flex;align-items:center;">
+                            <span style="font-size:22px;font-weight:700;color:var(--muted);margin-right:4px;">₹</span>
+                            <input type="number" id="paymentAmountInput" placeholder="0.00" style="font-size:26px;font-weight:700;font-family:'DM Mono',monospace;border:none;background:transparent;outline:none;width:100%;color:var(--dark);" oninput="updatePaymentSummary()">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:6px;margin-bottom:14px;">
+                        <button class="amount-chip" onclick="setPayAmount(100)">₹100</button>
+                        <button class="amount-chip" onclick="setPayAmount(500)">₹500</button>
+                        <button class="amount-chip" onclick="setPayAmount(1000)">₹1K</button>
+                        <button class="amount-chip" onclick="setPayAmount(2000)">₹2K</button>
+                        <button class="amount-chip" onclick="setPayAmount(5000)">₹5K</button>
+                    </div>
+                    <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;"><span style="color:var(--muted);">Top-up amount</span><span id="summaryAmount" style="font-weight:600;font-family:'DM Mono',monospace;">₹0.00</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;"><span style="color:var(--muted);">Processing fee</span><span style="color:var(--green);font-weight:600;">FREE</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding-top:8px;border-top:1px solid var(--border);"><span>Total</span><span id="summaryTotal" style="font-family:'DM Mono',monospace;">₹0.00</span></div>
+                    </div>
+                    <div id="methodIndicator" style="background:var(--bg);border-radius:7px;padding:8px 12px;font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                        Select a payment method
+                    </div>
+                    <button class="btn-primary" onclick="confirmPayment()" id="confirmPayBtn" disabled style="font-size:14px;font-weight:700;padding:13px 0;display:flex;align-items:center;justify-content:center;gap:8px;opacity:0.45;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                        Confirm & Pay
+                    </button>
+                    <button class="btn-outline" onclick="showSection('home')" style="margin-top:10px;">Cancel</button>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;">
+                        <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--muted);"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 256-bit SSL</div>
+                        <div style="width:3px;height:3px;background:var(--border);border-radius:50%;"></div>
+                        <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--muted);"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg> PCI DSS</div>
+                        <div style="width:3px;height:3px;background:var(--border);border-radius:50%;"></div>
+                        <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--muted);"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> RBI Regulated</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRANSACTIONS -->
+    <section class="section" id="sec-transactions">
+        <div class="page-title">Transaction History</div>
+        <div class="card">
+            <table>
+                <thead><tr><th>Type</th><th>Date &amp; Time</th><th>Amount</th><th>Method</th></tr></thead>
+                <tbody id="allTxBody"><tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No transactions yet</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- REWARDS -->
+    <section class="section" id="sec-rewards">
+        <div class="page-title">Rewards</div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-label">Your Points</div>
+                    <div class="balance-amount" id="rewardPointsFull">0</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:6px;" id="txCount">Transactions: 0</div>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-label" style="margin-bottom:14px;">Redeem Vouchers</div>
+                    <div class="voucher-grid">
+                        <div class="voucher-card" onclick="redeemVoucher('stationery-5', 50)"><strong>Stationery Kit</strong><span>$5 — 50 pts</span></div>
+                        <div class="voucher-card" onclick="redeemVoucher('book-10', 100)"><strong>Book Voucher</strong><span>$10 — 100 pts</span></div>
+                        <div class="voucher-card" onclick="redeemVoucher('school-supplies-15', 150)"><strong>School Supplies</strong><span>$15 — 150 pts</span></div>
+                        <div class="voucher-card" onclick="redeemVoucher('online-course-20', 200)"><strong>Online Course</strong><span>$20 — 200 pts</span></div>
+                    </div>
+                    <div class="msg-box" id="voucherMsg"></div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-label" style="margin-bottom:14px;">Reward History</div>
+                    <table>
+                        <thead><tr><th>Date</th><th>Type</th><th>Points</th><th>Details</th></tr></thead>
+                        <tbody id="rewardHistory"><tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No reward history yet</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACTS -->
+    <section class="section" id="sec-contacts">
+        <div class="page-title">Contacts</div>
+        <div class="card">
+            <p style="color:var(--muted);font-size:13px;">Your contacts will appear here.</p>
+        </div>
+    </section>
+
+    <!-- TICKETS -->
+    <section class="section" id="sec-tickets">
+        <div class="page-title">Ticket History</div>
+        <div class="card">
+            <table>
+                <thead><tr><th>Ticket ID</th><th>Issue Type</th><th>Description</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody id="ticketList"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px;">Loading tickets...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section class="section" id="sec-security">
+        <div class="page-title">Security Center</div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-label" style="margin-bottom:14px;">Reset PIN</div>
+                    <div class="field"><label>Current PIN</label><input type="password" id="currentPin" maxlength="4" placeholder="••••"></div>
+                    <div class="field"><label>New PIN</label><input type="password" id="newPin" maxlength="4" placeholder="••••"></div>
+                    <button class="btn-primary" onclick="resetPin()">Reset PIN</button>
+                    <div class="msg-box" id="pinMsg"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="section" id="sec-profile">
+        <div class="page-title">Profile</div>
+        <div class="row">
+            <div class="col-md-5">
+                <div class="card">
+                    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ name }}&backgroundColor=b6e3f4" alt="Profile" class="profile-avatar" id="profilePicImg">
+                        <div>
+                            <div style="font-weight:600;font-size:15px;">{{ name }}</div>
+                            <div style="font-size:12px;color:var(--muted);">{{ email }}</div>
+                            <input type="file" id="picFileInput" style="display:none;" onchange="previewPic(event)">
+                            <button class="edit-btn" style="margin-top:6px;" onclick="document.getElementById('picFileInput').click()">Change photo</button>
+                        </div>
+                    </div>
+                    <div class="profile-row"><span>Name</span><span>{{ name }}</span></div>
+                    <div class="profile-row"><span>Email</span><span>{{ email }}</span></div>
+                    <div class="profile-row">
+                        <span>Phone</span>
+                        <span id="profilePhone">{{ phone if phone else "—" }}</span>
+                        <input class="edit-input" id="editPhone" value="{{ phone }}">
+                        <button class="edit-btn" onclick="toggleEdit('phone')">Edit</button>
+                    </div>
+                    <div class="profile-row"><span>PIN</span><span>••••</span></div>
+                    <button class="btn-primary" id="saveProfileBtn" style="margin-top:16px;display:none;" onclick="saveProfile()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SUPPORT -->
+    <section class="section" id="sec-support">
+        <div class="page-title">Support</div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-label" style="margin-bottom:10px;">Call Us</div>
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">+1-800-123-4567</p>
+                    <button class="btn-primary" onclick="callSupport()">Call Now</button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-label" style="margin-bottom:10px;">Request Callback</div>
+                    <div class="field"><label>Your Number</label><input type="tel" id="callbackNum" placeholder="10-digit number" maxlength="10"></div>
+                    <button class="btn-primary" onclick="requestCallback()">Submit</button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-label" style="margin-bottom:10px;">Send a Message</div>
+                    <div class="field"><label>Message</label><textarea id="supportMsg" placeholder="Describe your issue..."></textarea></div>
+                    <button class="btn-primary" onclick="sendSupportMsg()">Send</button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-label" style="margin-bottom:10px;">Raise a Ticket</div>
+                    <div class="field">
+                        <label>Issue Type</label>
+                        <select id="issueType">
+                            <option value="">Select type</option>
+                            <option value="payment">Payment Issue</option>
+                            <option value="account">Account Issue</option>
+                            <option value="technical">Technical Issue</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Description</label><textarea id="issueDesc" placeholder="Describe your issue..."></textarea></div>
+                    <button class="btn-primary" onclick="raiseTicket()">Submit Ticket</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- CHATBOT -->
+<button class="chatbot-btn" id="chatBotBtn" onclick="toggleChat()">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+</button>
+<div class="chatbot-box" id="chatbotBox">
+    <div class="chatbot-head">
+        ID-PAY Assistant
+        <button onclick="toggleChat()">×</button>
+    </div>
+    <div class="chatbot-msgs" id="chatMsgs">
+        <div class="msg bot">Hi! How can I help you today?</div>
+    </div>
+    <div class="chatbot-input-row">
+        <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendChat()">
+        <button onclick="sendChat()">Send</button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    // ─── STATE ───
+    const userId = {{ session['user_id'] }};
+    let sidebarOpen = true;
+    let notifications = [];
+    let lastTxId = 0;
+    let rewardPts = 0;
+    let txCount = 0;
+    let rewardHist = [];
+    let isEditing = false;
+    let chartType = 'bar';
+    let analyticsChart, sparkChart;
+
+    // ─── SIDEBAR (moved to document.ready) ───
+
+    // ─── SECTIONS ───
+    function showSection(id) {
+        $('.section').removeClass('active');
+        $('#sec-' + id).addClass('active');
+        $('.sidebar-link').removeClass('active');
+        $('#link-' + id).addClass('active');
+        $('.nav-btn').removeClass('active');
+        if (id === 'home')         { $('.nav-btn').eq(0).addClass('active'); fetchDashboardData(); }
+        if (id === 'profile')      { $('.nav-btn').eq(1).addClass('active'); loadProfileData(); }
+        if (id === 'support')      { $('.nav-btn').eq(2).addClass('active'); }
+        if (id === 'tickets')      { fetchTickets(); }
+        if (id === 'rewards')      { fetchRewards(); }
+        if (id === 'transactions') { fetchAllTransactions(); }
+        if (id === 'payment')      { buildQR(); }
+        // scroll to top of main content
+        $('#main').scrollTop(0);
+    }
+
+    function switchTab(name, btn) {
+        $('.tab-panel').removeClass('active');
+        $('.tab-btn').removeClass('active');
+        $('#tab-' + name).addClass('active');
+        $(btn).addClass('active');
+    }
+
+    // ─── CHARTS ───
+    const chartData = {
+        labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Dec'],
+        expense: [1200, 1800, 1500, 2200, 1600, 800],
+        income:  [1800, 2200, 2000, 2700, 2100, 1200]
+    };
+
+    function initAnalyticsChart() {
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+        analyticsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    { label: 'Expense', data: chartData.expense, backgroundColor: '#111110', borderRadius: 3, barPercentage: 0.45, categoryPercentage: 0.7 },
+                    { label: 'Income',  data: chartData.income,  backgroundColor: '#cccccc', borderRadius: 3, barPercentage: 0.45, categoryPercentage: 0.7 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ₹' + ctx.raw.toLocaleString() } } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#7a7a72' }, border: { display: false } },
+                    y: { min: 0, max: 3200, grid: { color: '#f0ede6' }, ticks: { font: { size: 9 }, color: '#7a7a72', maxTicksLimit: 4, stepSize: 1000 }, border: { display: false } }
+                }
+            }
+        });
+    }
+
+    function toggleChartDropdown() {
+        var dd = document.getElementById('chartDropdown');
+        dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function selectChart(type, label) {
+        document.getElementById('chartLabel').textContent = label;
+        document.getElementById('chartDropdown').style.display = 'none';
+        if (!analyticsChart) return;
+
+        const isDoughnutOrRadar = (type === 'doughnut' || type === 'radar');
+        document.getElementById('chartLegend').style.display = isDoughnutOrRadar ? 'none' : 'flex';
+
+        analyticsChart.destroy();
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+
+        if (isDoughnutOrRadar) {
+            analyticsChart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: ['Shopping','Food','Transport','Home','Security','Finance'],
+                    datasets: [{ data: [30, 25, 15, 12, 10, 8], backgroundColor: ['#111','#444','#777','#999','#bbb','#ddd'], borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
+                    plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 10 } } }
+                }
+            });
+        } else {
+            const isLine = type === 'line';
+            analyticsChart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: chartData.labels,
+                    datasets: [
+                        { label: 'Expense', data: chartData.expense, backgroundColor: isLine ? 'rgba(17,17,16,0.08)' : '#111110', borderColor: '#111110', borderWidth: isLine ? 2 : 0, fill: isLine, tension: 0.4, pointRadius: isLine ? 3 : 0, borderRadius: isLine ? 0 : 3, barPercentage: 0.45, categoryPercentage: 0.7 },
+                        { label: 'Income',  data: chartData.income,  backgroundColor: isLine ? 'rgba(180,180,180,0.08)' : '#cccccc', borderColor: '#cccccc', borderWidth: isLine ? 2 : 0, fill: isLine, tension: 0.4, pointRadius: isLine ? 3 : 0, borderRadius: isLine ? 0 : 3, barPercentage: 0.45, categoryPercentage: 0.7 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ₹' + ctx.raw.toLocaleString() } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#7a7a72' }, border: { display: false } },
+                        y: { min: 0, max: 3200, grid: { color: '#f0ede6' }, ticks: { font: { size: 9 }, color: '#7a7a72', maxTicksLimit: 4 }, border: { display: false } }
+                    }
+                }
+            });
+        }
+    }
+
+    // ─── CHART CLICK OUTSIDE (moved to document.ready) ───
+
+    // ─── DASHBOARD DATA (balance + transactions + rewards — all in one call) ───
+    function fetchDashboardData() {
+        $.ajax({
+            url: '/get_dashboard_data', method: 'POST', contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId }),
+            success: function (data) {
+                if (data.status !== 'success') return;
+
+                // Balance
+                $('#balanceDisplay').text('₹' + data.balance.toFixed(2));
+                $('#totalCredited').text('₹' + data.total_credited.toFixed(2));
+
+                // Monthly change indicator
+                if (data.total_credited > 0) {
+                    $('#monthlyChange').text('₹' + data.total_credited.toFixed(0) + ' credited');
+                } else {
+                    $('#monthlyChange').text('—');
+                }
+
+                // Monthly expense (sum of non-top-up this month from all_transactions)
+                var now = new Date();
+                var monthExpense = 0;
+                (data.all_transactions || []).forEach(function(t) {
+                    var d = new Date(t.date_time);
+                    if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && t.type !== 'Top Up') {
+                        monthExpense += t.amount;
+                    }
+                });
+                $('#monthlyExpense').text('₹' + monthExpense.toFixed(2));
+
+                // Reward points
+                rewardPts = data.reward_points || 0;
+                txCount = data.transaction_count || 0;
+                $('#rewardPoints').text(rewardPts);
+                $('#rewardPointsFull').text(rewardPts);
+                $('#txCount').text('Transactions: ' + txCount);
+
+                // Recent transactions table (home section)
+                renderRecentTx(data.recent_transactions || []);
+
+                // All transactions table
+                renderAllTx(data.all_transactions || []);
+
+                // Update lastTxId for polling
+                if (data.recent_transactions && data.recent_transactions.length) {
+                    lastTxId = data.recent_transactions[0].id;
+                }
+            },
+            error: function() { $('#balanceDisplay').text('₹0.00'); showToast('Could not load dashboard data. Is the server running?'); }
+        });
+    }
+
+    // Keep fetchBalance as alias so other parts still work
+    function fetchBalance() { fetchDashboardData(); }
+
+    function fetchAllTransactions() {
+        $.ajax({
+            url: '/get_all_transactions', method: 'POST', contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId }),
+            success: function(data) {
+                if (data.status === 'success') renderAllTx(data.transactions || []);
+            },
+            error: function() { $('#allTxBody').html('<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">Could not load transactions</td></tr>'); }
+        });
+    }
+
+    function loadProfileData() {
+        // Profile data already in DOM from Jinja2 — just refresh phone from server
+        $.ajax({
+            url: '/get_dashboard_data', method: 'POST', contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId }),
+            success: function(data) {
+                if (data.status === 'success') {
+                    // Update rewards while we have fresh data
+                    rewardPts = data.reward_points || 0;
+                    $('#rewardPointsFull').text(rewardPts);
+                    $('#rewardPoints').text(rewardPts);
+                }
+            },
+            error: function() {}
+        });
+    }
+
+    function renderRecentTx(txns) {
+        var tbody = $('#recentTxBody');
+        if (!txns.length) {
+            tbody.html('<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:16px;">No transactions yet</td></tr>');
+            return;
+        }
+        tbody.html(txns.map(function(t) {
+            var cls = t.type === 'Top Up' ? 'badge-green' : 'badge-red';
+            return '<tr>' +
+                '<td><span class="badge ' + cls + '">' + t.type + '</span></td>' +
+                '<td style="color:var(--muted);">' + t.date_time + '</td>' +
+                '<td style="font-family:monospace;font-weight:600;">₹' + parseFloat(t.amount).toFixed(2) + '</td>' +
+                '</tr>';
+        }).join(''));
+    }
+
+    function renderAllTx(txns) {
+        var tbody = $('#allTxBody');
+        if (!txns.length) {
+            tbody.html('<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No transactions yet</td></tr>');
+            return;
+        }
+        tbody.html(txns.map(function(t) {
+            var cls = t.type === 'Top Up' ? 'badge-green' : 'badge-red';
+            return '<tr>' +
+                '<td><span class="badge ' + cls + '">' + t.type + '</span></td>' +
+                '<td style="color:var(--muted);">' + t.date_time + '</td>' +
+                '<td style="font-family:monospace;font-weight:600;">₹' + parseFloat(t.amount).toFixed(2) + '</td>' +
+                '<td>' + t.method + '</td>' +
+                '</tr>';
+        }).join(''));
+    }
+
+    // ─── TOP UP ───
+    let selectedPayMethod = 'upi';
+
+    function setAmount(val) {
+        $('#topupAmount').val(val);
+        $('.amount-chip').removeClass('active');
+        $('.amount-chip').filter(function() { return $(this).text() === '₹' + val; }).addClass('active');
+    }
+
+    function selectPayMethod(method) {
+        selectedPayMethod = method;
+        $('.pay-method-pill').removeClass('active');
+        $('#pm-' + method).addClass('active');
+    }
+
+    function goToPayment() {
+        var amount = parseFloat($('#topupAmount').val());
+        if (!amount || amount <= 0) { showToast('Enter a valid amount first.'); return; }
+        // Carry amount to payment section
+        showSection('payment');
+        setTimeout(function() {
+            $('#paymentAmountInput').val(amount);
+            updatePaymentSummary();
+        }, 50);
+    }
+
+    // ─── PAYMENT GATEWAY ───
+    const indianBanks = [
+        { name:'SBI', short:'SBI', color:'#22577a' },
+        { name:'HDFC Bank', short:'HDFC', color:'#003087' },
+        { name:'ICICI Bank', short:'ICICI', color:'#F7941D' },
+        { name:'Axis Bank', short:'AXIS', color:'#800000' },
+        { name:'Kotak Mahindra', short:'KMB', color:'#EE3124' },
+        { name:'Punjab National Bank', short:'PNB', color:'#003087' },
+        { name:'Bank of Baroda', short:'BOB', color:'#F7941D' },
+        { name:'Canara Bank', short:'CNR', color:'#007B40' },
+        { name:'Union Bank', short:'UBI', color:'#003087' },
+        { name:'IndusInd Bank', short:'IIB', color:'#673AB7' },
+        { name:'Yes Bank', short:'YES', color:'#00704A' },
+        { name:'IDBI Bank', short:'IDBI', color:'#004990' },
+        { name:'Federal Bank', short:'FBL', color:'#E31837' },
+        { name:'Bank of India', short:'BOI', color:'#003087' },
+        { name:'Central Bank', short:'CBI', color:'#E31837' },
+        { name:'Indian Bank', short:'IND', color:'#003087' },
+        { name:'UCO Bank', short:'UCO', color:'#1B75BC' },
+        { name:'Karnataka Bank', short:'KTK', color:'#C8102E' },
+        { name:'Dhanlaxmi Bank', short:'DLB', color:'#F7941D' },
+        { name:'Jammu & Kashmir Bank', short:'J&K', color:'#003087' }
+    ];
+    const popularBankIdxs = [0,1,2,3,4,5,6,7]; // first 8 = popular
+
+    let selectedGateway = null;
+    let selectedBank = null;
+    let selectedUpiApp = 'GPay';
+
+    function initBankGrid() {
+        var html = '';
+        for (var i = 0; i < popularBankIdxs.length; i++) {
+            var b = indianBanks[popularBankIdxs[i]];
+            html += '<div class="bank-card" id="bank-' + i + '" onclick="selectBank(\'' + b.name + '\', this)">' +
+                '<div class="bank-logo" style="background:' + b.color + ';">' + b.short + '</div>' +
+                b.name.split(' ')[0] + '</div>';
+        }
+        $('#bankGrid').html(html);
+    }
+
+    function filterBanks(q) {
+        if (!q) { $('#bankSearchResults').hide(); return; }
+        var results = indianBanks.filter(function(b){ return b.name.toLowerCase().includes(q.toLowerCase()); });
+        if (!results.length) { $('#bankSearchResults').html('<div class="bank-search-item" style="color:var(--muted);">No banks found</div>').show(); return; }
+        var html = results.map(function(b){
+            return '<div class="bank-search-item" onclick="selectBank(\'' + b.name + '\', null)">' +
+                '<div style="width:28px;height:28px;border-radius:6px;background:' + b.color + ';display:flex;align-items:center;justify-content:center;color:white;font-size:9px;font-weight:800;flex-shrink:0;">' + b.short + '</div>' +
+                b.name + '</div>';
+        }).join('');
+        $('#bankSearchResults').html(html).show();
+    }
+
+    function selectBank(name, el) {
+        selectedBank = name;
+        $('#selectedBankName').text(name);
+        $('#selectedBankDisplay').show();
+        $('#bankSearchResults').hide();
+        $('#bankSearch').val('');
+        $('.bank-card').removeClass('selected');
+        if (el) $(el).addClass('selected');
+        enableConfirmIfReady();
+    }
+
+    function selectGateway(type) {
+        selectedGateway = type;
+        $('#methodGrid').hide();
+        $('.gw-form').hide();
+        $('#form-' + type).show();
+
+        if (type === 'qr') {
+            var amt = parseFloat($('#paymentAmountInput').val()) || 0;
+            generateQRCode(amt);
+            enableConfirmIfReady();
+        }
+        if (type === 'netbank') initBankGrid();
+
+        var labels = { upi:'UPI', qr:'QR Code', card:'Debit/Credit Card', netbank:'Net Banking' };
+        $('#methodIndicator').html('<svg width="12" height="12" fill="none" stroke="var(--green)" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> <span style="color:var(--dark);font-weight:600;">' + labels[type] + '</span> selected');
+        if (type === 'upi') enableConfirmIfReady();
+        if (type === 'card') enableConfirmIfReady();
+    }
+
+    function backToGrid() {
+        selectedGateway = null;
+        $('.gw-form').hide();
+        $('#methodGrid').show();
+        $('#methodIndicator').html('<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg> Select a payment method');
+        $('#methodIndicator').css('color', 'var(--muted)');
+        disableConfirm();
+    }
+
+    function selectUpiApp(el, appName) {
+        selectedUpiApp = appName;
+        $('.upi-app-btn').removeClass('active');
+        $(el).addClass('active');
+    }
+
+    function verifyUPI() {
+        var id = $('#upiIdInput').val().trim();
+        if (!id || !/^\w[\w.\-]*@\w+$/.test(id)) { showToast('Enter a valid UPI ID (e.g. name@okicici)'); return; }
+        $('#upiVerifiedName').text('Dummy User');
+        $('#upiVerified').show();
+        enableConfirmIfReady();
+    }
+
+    function formatCardNumber(input) {
+        var v = input.value.replace(/\D/g,'').substring(0,16);
+        input.value = v.replace(/(.{4})/g,'$1 ').trim();
+    }
+
+    function formatExpiry(input) {
+        var v = input.value.replace(/\D/g,'').substring(0,4);
+        if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
+        input.value = v;
+    }
+
+    function updateCardPreview() {
+        var num = $('#cardNumberInput').val() || '•••• •••• •••• ••••';
+        var name = $('#cardNameInput').val().toUpperCase() || 'YOUR NAME';
+        var exp = $('#cardExpiryInput').val() || 'MM/YY';
+        $('#cardPreviewNumber').text(num.length > 3 ? num : '•••• •••• •••• ••••');
+        $('#cardPreviewName').text(name);
+        $('#cardPreviewExpiry').text(exp);
+        enableConfirmIfReady();
+    }
+
+    function enableConfirmIfReady() {
+        var amt = parseFloat($('#paymentAmountInput').val());
+        if (!amt || amt <= 0 || !selectedGateway) { disableConfirm(); return; }
+        if (selectedGateway === 'upi' && !$('#upiVerified').is(':visible')) { disableConfirm(); return; }
+        if (selectedGateway === 'card') {
+            var num = $('#cardNumberInput').val().replace(/\s/g,'');
+            var cvv = $('#cvvInput').val();
+            if (num.length < 16 || cvv.length < 3) { disableConfirm(); return; }
+        }
+        if (selectedGateway === 'netbank' && !selectedBank) { disableConfirm(); return; }
+        $('#confirmPayBtn').prop('disabled', false).css({'opacity':'1','pointer-events':'auto'});
+    }
+
+    function disableConfirm() {
+        $('#confirmPayBtn').prop('disabled', true).css({'opacity':'0.45','pointer-events':'none'});
+    }
+
+    function setPayAmount(val) {
+        $('#paymentAmountInput').val(val);
+        updatePaymentSummary();
+        if (selectedGateway === 'qr') { generateQRCode(val); }
+        enableConfirmIfReady();
+    }
+
+    function updatePaymentSummary() {
+        var amt = parseFloat($('#paymentAmountInput').val()) || 0;
+        var fmt = '₹' + amt.toFixed(2);
+        $('#summaryAmount').text(fmt);
+        $('#summaryTotal').text(fmt);
+        $('#payAmountLabel').text(fmt);
+        enableConfirmIfReady();
+    }
+
+    function confirmPayment() {
+        var amount = parseFloat($('#paymentAmountInput').val());
+        if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
+        var method = selectedGateway === 'upi' ? selectedUpiApp + ' UPI' :
+                     selectedGateway === 'qr'  ? 'QR Code' :
+                     selectedGateway === 'card' ? 'Card' :
+                     selectedGateway === 'netbank' ? (selectedBank || 'Net Banking') : 'Unknown';
+
+        // Show loading state
+        $('#confirmPayBtn').html('<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Processing...').prop('disabled', true).css('opacity','0.7');
+
+        $.ajax({
+            url: '/top_up_wallet', method: 'POST', contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId, amount: amount, method: method }),
+            success: function(data) {
+                $('#confirmPayBtn').html('<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Confirm & Pay').prop('disabled', false).css('opacity','1');
+                if (data.status === 'success') {
+                    showToast('✓ ₹' + amount.toFixed(2) + ' added via ' + method + '!');
+                    $('#topupAmount').val('');
+                    backToGrid();
+                    fetchDashboardData(); setTimeout(function(){ showSection('home'); }, 1200);
+                } else { showToast(data.message || 'Payment failed. Try again.'); }
+            },
+            error: function() {
+                $('#confirmPayBtn').html('<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Confirm & Pay').prop('disabled', false).css('opacity','1');
+                showToast('Connection error. Please try again.');
+            }
+        });
+    }
+
+    // ─── QR ───
+    function buildQR() {
+        var amt = parseFloat($('#topupAmount').val()) || 0;
+        $('#paymentAmountInput').val(amt > 0 ? amt : '');
+        $('#payAmountLabel').text(amt > 0 ? '₹' + amt.toFixed(2) : '₹0.00');
+        if (amt > 0) updatePaymentSummary();
+        backToGrid();
+    }
+
+    function generateQRCode(amt) {
+        $('#qrcode').html('');
+        new QRCode(document.getElementById('qrcode'), {
+            text: 'upi://pay?pa=idpay@okaxis&pn=ID-PAY&am=' + amt + '&cu=INR',
+            width: 160, height: 160
+        });
+        $('#qrAmountLabel').text('₹' + parseFloat(amt).toFixed(2));
+    }
+    function quickSend(name) { showToast('Opening send to ' + name + '…'); }
+    function nextContacts() { showToast('More contacts coming soon!'); }
+
+    // ─── SPLIT BILL ───
+    let splitPeople = 2;
+
+    function toggleSplitBill() {
+        var panel = $('#splitBillPanel');
+        panel.is(':visible') ? panel.slideUp(200) : panel.slideDown(200);
+        renderSplitPeople();
+    }
+
+    function changeSplitCount(delta) {
+        splitPeople = Math.max(2, Math.min(10, splitPeople + delta));
+        $('#splitCount').text(splitPeople);
+        recalcSplit();
+        renderSplitPeople();
+    }
+
+    function recalcSplit() {
+        var total = parseFloat($('#splitTotal').val());
+        if (!total || total <= 0) { $('#splitResult').hide(); return; }
+        var per = (total / splitPeople).toFixed(2);
+        $('#splitPerPerson').text('₹' + per);
+        $('#splitResult').show();
+        $('.split-person-amount').text('₹' + per);
+    }
+
+    function renderSplitPeople() {
+        var list = $('#splitPeopleList');
+        var contacts = ['You','2ama','Samarth','Komal','Rohan','Priya','Arun','Meera','Dev','Raj'];
+        var seeds = ['Dummy','Ama','Samarth','Komal','Rohan','Priya','Arun','Meera','Dev','Raj'];
+        var total = parseFloat($('#splitTotal').val()) || 0;
+        var per = total > 0 ? (total / splitPeople).toFixed(2) : '0.00';
+        var html = '';
+        for (var i = 0; i < splitPeople; i++) {
+            var name = contacts[i] || ('Person ' + (i+1));
+            var seed = seeds[i] || ('Person' + i);
+            html += '<div class="split-person-row" style="display:flex;align-items:center;gap:8px;">' +
+                '<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=' + seed + '&backgroundColor=b6e3f4" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);flex-shrink:0;">' +
+                '<input class="split-person-name" value="' + name + '" style="flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:\'DM Sans\',sans-serif;background:var(--bg);outline:none;min-width:0;">' +
+                '<span class="split-person-amount" style="font-size:12px;font-weight:700;font-family:\'DM Mono\',monospace;min-width:55px;text-align:right;flex-shrink:0;">₹' + per + '</span>' +
+                '</div>';
+        }
+        list.html(html);
+    }
+
+    function sendSplitRequests() {
+        var total = parseFloat($('#splitTotal').val());
+        if (!total || total <= 0) { showToast('Enter the total bill amount first.'); return; }
+        var names = [];
+        $('.split-person-name').each(function(i) { if (i > 0) names.push($(this).val() || ('Person ' + (i+1))); });
+        var per = (total / splitPeople).toFixed(2);
+        showToast('Split requests sent to ' + names.join(', ') + ' for ₹' + per + ' each! 🎉');
+    }
+
+    // ─── TXN TOGGLE ───
+    let txnOpen = true;
+    function toggleTxn() {
+        txnOpen = !txnOpen;
+        $('#txnTableWrap').toggle(txnOpen);
+        $('.txn-toggle svg').css('transform', txnOpen ? '' : 'rotate(180deg)');
+    }
+
+    // ─── ID SCAN ───
+    function startIdScan() {
+        $('#idScanResult').show();
+        $('#detectedId').val('ID' + Math.floor(Math.random() * 900000000 + 100000000));
+        $('#recipientName').val('Demo User');
+        showToast('ID scanned successfully!');
+    }
+
+    function payWithIdPin() {
+        var amount = parseFloat($('#idPayAmount').val());
+        if (!amount || amount <= 0) { showToast('Enter a valid amount.'); return; }
+        showToast('Payment of ₹' + amount + ' initiated.');
+    }
+
+    // ─── PIN ───
+    function resetPin() {
+        var cur = $('#currentPin').val();
+        var nw = $('#newPin').val();
+        if (!cur || !/^\d{4}$/.test(nw)) { showMsg('pinMsg', 'New PIN must be exactly 4 digits.', 'error'); return; }
+        $.ajax({
+            url: '/reset_pin',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId, current_pin: cur, new_pin: nw }),
+            success: function (data) {
+                if (data.status === 'success') { showMsg('pinMsg', 'PIN reset successfully.', 'success'); $('#currentPin, #newPin').val(''); }
+                else { showMsg('pinMsg', data.message || 'Reset failed.', 'error'); }
+            },
+            error: function() { showMsg('pinMsg', 'Could not connect.', 'error'); }
+        });
+    }
+
+    // ─── TICKETS ───
+    function fetchTickets() {
+        $.ajax({
+            url: '/get_ticket_history',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId }),
+            success: function (data) {
+                var tbody = $('#ticketList');
+                if (data.status === 'success' && data.tickets && data.tickets.length) {
+                    var rows = data.tickets.map(function (t) {
+                        return '<tr><td>' + t.ticket_id + '</td><td>' + t.issue_type + '</td><td>' + t.description + '</td><td style="color:var(--muted);">' + t.date + '</td><td>' + t.status + '</td></tr>';
+                    }).join('');
+                    tbody.html(rows);
+                } else { tbody.html('<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px;">No tickets found</td></tr>'); }
+            },
+            error: function() { $('#ticketList').html('<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px;">Could not load tickets</td></tr>'); }
+        });
+    }
+
+    // ─── REWARDS ───
+    function fetchRewards() {
+        // Data already loaded by fetchDashboardData on home load
+        // This remains for direct section visits
+        $.ajax({
+            url: '/get_rewards',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId }),
+            success: function (data) {
+                if (data.status === 'success') {
+                    rewardPts = data.points || 0;
+                    txCount = data.transaction_count || 0;
+                    rewardHist = data.history || [];
+                    updateRewardsUI();
+                }
+            },
+            error: function() {}
+        });
+    }
+
+    function updateRewardsUI() {
+        $('#rewardPointsFull').text(rewardPts);
+        $('#rewardPoints').text(rewardPts);
+        $('#txCount').text('Transactions: ' + txCount);
+        // Also update the home panel reward display
+        $('#rewardPoints').text(rewardPts);
+        if (rewardHist.length) {
+            var rows = rewardHist.map(function (r) {
+                return '<tr><td style="color:var(--muted);">' + new Date(r.date).toLocaleDateString() + '</td><td>' + r.type + '</td><td>' + r.points + '</td><td>' + r.details + '</td></tr>';
+            }).join('');
+            $('#rewardHistory').html(rows);
+        }
+    }
+
+    function redeemVoucher(type, pts) {
+        if (rewardPts < pts) { showMsg('voucherMsg', 'Not enough points.', 'error'); return; }
+        $.ajax({
+            url: '/redeem_voucher',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId, voucher_type: type, points: pts }),
+            success: function (data) {
+                if (data.status === 'success') {
+                    rewardPts -= pts;
+                    showMsg('voucherMsg', 'Voucher redeemed! Code: ' + data.voucher_code, 'success');
+                    updateRewardsUI();
+                } else { showMsg('voucherMsg', data.message || 'Redemption failed.', 'error'); }
+            },
+            error: function() { showMsg('voucherMsg', 'Could not connect.', 'error'); }
+        });
+    }
+
+    // ─── SUPPORT ───
+    function callSupport() { window.location.href = 'tel:+18001234567'; }
+
+    function requestCallback() {
+        var num = $('#callbackNum').val();
+        if (!/^\d{10}$/.test(num)) { showToast('Enter a valid 10-digit number.'); return; }
+        $.ajax({ url: '/request_callback', method: 'POST', contentType: 'application/json', data: JSON.stringify({ user_id: userId, phone: num }),
+            success: function (data) { showToast(data.status === 'success' ? 'Callback requested for ' + num : data.message || 'Request failed.'); $('#callbackNum').val(''); },
+            error: function() { showToast('Could not connect.'); }
+        });
+    }
+
+    function sendSupportMsg() {
+        var msg = $('#supportMsg').val().trim();
+        if (!msg) { showToast('Write a message before sending.'); return; }
+        $.ajax({ url: '/send_support_email', method: 'POST', contentType: 'application/json', data: JSON.stringify({ user_id: userId, message: msg }),
+            success: function (data) { showToast(data.status === 'success' ? 'Message sent to support.' : data.message || 'Failed.'); $('#supportMsg').val(''); },
+            error: function() { showToast('Could not connect.'); }
+        });
+    }
+
+    function raiseTicket() {
+        var type = $('#issueType').val();
+        var desc = $('#issueDesc').val().trim();
+        if (!type || !desc) { showToast('Select issue type and describe the problem.'); return; }
+        $.ajax({ url: '/raise_ticket', method: 'POST', contentType: 'application/json', data: JSON.stringify({ user_id: userId, issue_type: type, description: desc }),
+            success: function (data) {
+                if (data.status === 'success') { showToast('Ticket #' + data.ticket_id + ' raised.'); $('#issueType').val(''); $('#issueDesc').val(''); }
+                else { showToast(data.message || 'Failed to raise ticket.'); }
+            },
+            error: function() { showToast('Could not connect.'); }
+        });
+    }
+
+    // ─── PROFILE ───
+    function toggleEdit(field) {
+        var span = $('#profile' + field.charAt(0).toUpperCase() + field.slice(1));
+        var input = $('#edit' + field.charAt(0).toUpperCase() + field.slice(1));
+        if (input.is(':visible')) { span.show(); input.hide(); span.text(input.val()); isEditing = true; $('#saveProfileBtn').show(); }
+        else { span.hide(); input.show().focus(); }
+    }
+
+    function previewPic(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (e) { $('#profilePicImg').attr('src', e.target.result); isEditing = true; $('#saveProfileBtn').show(); };
+        reader.readAsDataURL(file);
+    }
+
+    function saveProfile() {
+        var formData = new FormData();
+        formData.append('user_id', userId);
+        var newPhone = $('#editPhone').val();
+        formData.append('phone', newPhone);
+        var fileInput = document.getElementById('picFileInput');
+        if (fileInput.files.length > 0) formData.append('profile_pic', fileInput.files[0]);
+        $.ajax({
+            url: '/update_profile', method: 'POST', processData: false, contentType: false, data: formData,
+            success: function (data) {
+                if (data.status === 'success') { showToast('Profile updated.'); $('#profilePhone').text(newPhone); if (data.profile_pic_url) $('#profilePicImg').attr('src', data.profile_pic_url); $('#saveProfileBtn').hide(); isEditing = false; }
+                else { showToast(data.message || 'Update failed.'); }
+            },
+            error: function() { showToast('Could not connect.'); }
+        });
+    }
+
+    // ─── NOTIFICATIONS ───
+    function toggleNotifDropdown() { $('#notifDropdown').toggleClass('open'); }
+
+    function addNotif(msg) {
+        notifications.unshift(msg);
+        $('#bellBadge').text(notifications.length);
+        var items = notifications.map(function (n) { return '<div class="notif-item">' + n + '</div>'; }).join('');
+        $('#notifDropdown').html(items);
+        showToast(msg);
+    }
+
+    function checkNotifications() {
+        $.ajax({
+            url: '/get_latest_transactions', method: 'POST', contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId, last_id: lastTxId }),
+            success: function (data) {
+                if (data.status === 'success' && data.transactions.length) {
+                    data.transactions.forEach(function (tx) {
+                        if (tx.id > lastTxId) {
+                            lastTxId = tx.id;
+                            if (tx.type === 'Receive') { addNotif('Received ₹' + tx.amount + ' from ' + tx.method); fetchBalance(); }
+                            else if (tx.type === 'Request Received') { addNotif('Money request of ₹' + tx.amount + ' from ' + tx.method); }
+                        }
+                    });
+                }
+            },
+            error: function() {}
+        });
+    }
+
+    // ─── TOAST ───
+    function showToast(msg) {
+        var toast = $('<div class="toast">' + msg + '</div>');
+        $('#toastWrap').append(toast);
+        setTimeout(function () { toast.fadeOut(300, function() { $(this).remove(); }); }, 4000);
+    }
+
+    function showMsg(id, msg, type) {
+        $('#' + id).text(msg).removeClass('success error').addClass(type).show();
+        setTimeout(function () { $('#' + id).hide(); }, 4000);
+    }
+
+    // ─── CHATBOT ───
+    function toggleChat() { $('#chatbotBox').toggleClass('open'); }
+
+    function sendChat() {
+        var msg = $('#chatInput').val().trim();
+        if (!msg) return;
+        $('#chatMsgs').append('<div class="msg user">' + msg + '</div>');
+        $('#chatInput').val('');
+        $('#chatMsgs').scrollTop($('#chatMsgs')[0].scrollHeight);
+        $.ajax({
+            url: '/chat_support', method: 'POST', contentType: 'application/json',
+            data: JSON.stringify({ user_id: userId, message: msg }),
+            success: function (data) {
+                var reply = (data.status === 'success') ? data.response : 'Sorry, something went wrong.';
+                setTimeout(function () { $('#chatMsgs').append('<div class="msg bot">' + reply + '</div>'); $('#chatMsgs').scrollTop($('#chatMsgs')[0].scrollHeight); }, 800);
+            },
+            error: function () {
+                setTimeout(function () { $('#chatMsgs').append('<div class="msg bot">Sorry, something went wrong.</div>'); $('#chatMsgs').scrollTop($('#chatMsgs')[0].scrollHeight); }, 800);
+            }
+        });
+    }
+
+    // ─── CLICK OUTSIDE (moved to document.ready) ───
+
+    // ─── INIT ───
+    $(document).ready(function () {
+        // ─── SIDEBAR TOGGLE ───
+        $('#menuToggle').on('click', function () {
+            sidebarOpen = !sidebarOpen;
+            $('#sidebar').toggleClass('hidden', !sidebarOpen);
+            $('#main').toggleClass('full', !sidebarOpen);
+        });
+
+        // ─── CHART DROPDOWN CLOSE ON OUTSIDE CLICK ───
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#chartDropBtn, #chartDropdown').length) {
+                $('#chartDropdown').hide();
+            }
+            if (!$(e.target).closest('#bellBtn, #notifDropdown').length) {
+                $('#notifDropdown').removeClass('open');
+            }
+        });
+
+        initAnalyticsChart();
+        fetchDashboardData();
+
+        // Poll every 30s
+        setInterval(function() {
+            fetchDashboardData();
+            checkNotifications();
+        }, 30000);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID-PAY — Contacts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/app.min.css" rel="stylesheet">
+</head>
+<body data-bs-theme="light">
+     
+    <nav class="navbar navbar-expand-lg fixed-top navbar-light bg-white shadow-sm border-bottom">
+        <div class="container-fluid">
+            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-brand d-flex align-items-center gap-2 fw-bold">
+                <div class="bg-primary text-white rounded p-1 fs-6">ID</div>
+                ID-PAY
+            </div>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active px-3 py-2" href="/home">
+                    <i class="bi bi-house-door me-1"></i>Home
+                </a>
+                <a class="nav-link px-3 py-2" href="/profile">
+                    <i class="bi bi-person me-1"></i>Profile
+                </a>
+                <a class="nav-link px-3 py-2" href="/support">
+                    <i class="bi bi-headset me-1"></i>Support
+                </a>
+            </div>
+        </div>
+    </nav>
+
+     
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold" id="sidebarLabel">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="list-group list-group-flush">
+                <a href="/home" class="list-group-item list-group-item-action active d-flex align-items-center gap-3 px-4 py-3">
+                    <i class="bi bi-house fs-5 text-primary"></i>
+                    <span class="fw-medium">Home</span>
+                </a>
+                <a href="/profile" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-4 py-3">
+                    <i class="bi bi-person fs-5"></i>
+                    <span class="fw-medium">Profile</span>
+                </a>
+                <a href="/contacts" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-4 py-3 active">
+                    <i class="bi bi-people fs-5"></i>
+                    <span class="fw-medium">Contacts</span>
+                </a>
+                <a href="/tickets" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-4 py-3">
+                    <i class="bi bi-ticket-detailed fs-5"></i>
+                    <span class="fw-medium">Tickets</span>
+                </a>
+                <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-4 py-3 text-danger border-top mt-auto">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                    <span class="fw-medium">Logout</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+     
+    <main class="pt-5 pb-5" style="margin-left: 0;">
+        <div class="container-fluid px-4">
+            <header class="d-flex align-items-center justify-content-between mb-4">
+                <h1 class="h3 fw-bold mb-0">Contacts</h1>
+            </header>
+
+            <div class="row g-4">
+                
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold text-uppercase text-muted small mb-3">Add Contact</h6>
+                            <form id="addContactForm">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small text-muted">ID Card Number</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-credit-card"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="newContactId" placeholder="ID123456789">
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold small text-muted">Name</label>
+                                    <input type="text" class="form-control form-control-lg" id="newContactName" placeholder="John Doe">
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Contact
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                 
+                <div class="col-lg-8">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="card-title fw-bold text-uppercase text-muted small mb-0">Your Contacts ({{ contacts|length or 0 }})</h6>
+                                <div class="input-group input-group-sm" style="width: 250px;">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="contactSearch" placeholder="Search contacts...">
+                                </div>
+                            </div>
+
+                            {% if transactions %}
+                            <div class="row g-3" id="contactsList">
+                                {% for contact in contacts %}
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm hover-shadow">
+                                        <div class="card-body d-flex align-items-center gap-3 p-3">
+                                            <div class="flex-shrink-0">
+                                                <div class="avatar avatar-lg bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold fs-5">
+                                                    {{ contact.name[0]|upper }}
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-1">{{ contact.name }}</h6>
+                                                <small class="text-muted d-block mb-1">ID: {{ contact.barcode }}</small>
+                                                {% if contact.last_transaction %}
+                                                <small class="badge bg-success">Last: ₹{{ contact.last_amount }}</small>
+                                                {% endif %}
+                                            </div>
+                                            <div class="ms-auto text-end">
+                                                <div class="input-group input-group-sm mb-1">
+                                                    <input type="number" class="form-control pay-amount text-end" placeholder="₹0.00" data-id="{{ contact.id }}">
+                                                </div>
+                                                <button class="btn btn-primary btn-sm px-3" onclick="payContact('{{ contact.id }}', this.previousElementSibling.value)">
+                                                    <i class="bi bi-send"></i> Pay
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-people display-1 text-muted mb-3 opacity-50"></i>
+                                <h5 class="text-muted">No contacts yet</h5>
+                                <p class="text-muted">Add your first contact using the form above</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.navbar-toggler').on('click', function() {
+                $('.offcanvas').addClass('show');
+            });
+
+            $('#contactSearch').on('input', function() {
+                const term = this.value.toLowerCase();
+                $('#contactsList .col-md-6').each(function() {
+                    const name = $(this).find('h6').text().toLowerCase();
+                    const id = $(this).find('small').text().toLowerCase();
+                    if (name.includes(term) || id.includes(term)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            $('#addContactForm').on('submit', function(e) {
+                e.preventDefault();
+                const id = $('#newContactId').val().trim();
+                const name = $('#newContactName').val().trim();
+                if (!id || !name) {
+                    showToast('Please fill both fields', 'error');
+                    return;
+                }
+                 
+                showToast(`Contact ${name} (${id}) added!`);
+                $('#newContactId, #newContactName').val('');
+            });
+        });
+
+        function payContact(id, amountStr) {
+            const amount = parseFloat(amountStr);
+            if (!amount || amount <= 0) {
+                showToast('Enter valid amount', 'error');
+                return;
+            }
+             
+            showToast(`₹${amount} sent to contact ${id}!`);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID-PAY — Rewards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/app.min.css" rel="stylesheet">
+</head>
+<body data-bs-theme="light">
+     
+    <nav class="navbar navbar-expand-lg fixed-top navbar-light bg-white shadow-sm border-bottom">
+        <div class="container-fluid">
+            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-brand d-flex align-items-center gap-2 fw-bold">
+                <div class="bg-primary text-white rounded p-1 fs-6">ID</div>
+                ID-PAY
+            </div>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link px-3 py-2" href="/home">
+                    <i class="bi bi-house-door me-1"></i>Home
+                </a>
+                <a class="nav-link px-3 py-2" href="/profile">
+                    <i class="bi bi-person me-1"></i>Profile
+                </a>
+                <a class="nav-link px-3 py-2" href="/support">
+                    <i class="bi bi-headset me-1"></i>Support
+                </a>
+            </div>
+        </div>
+    </nav>
+ 
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="list-group list-group-flush">
+                <a href="/home" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-4 py-3">
+                    <i class="bi bi-house fs-5"></i> <span class="fw-medium">Home</span>
+                </a>
+                <a href="/contacts" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-4 py-3">
+                    <i class="bi bi-people fs-5"></i> <span class="fw-medium">Contacts</span>
+                </a>
+                <a href="/requests" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-4 py-3">
+                    <i class="bi bi-arrow-left-right fs-5"></i> <span class="fw-medium">Requests</span>
+                </a>
+                <a href="/rewards" class="list-group-item list-group-item-action active d-flex align-items-center gap-3 px-4 py-3">
+                    <i class="bi bi-gift-heart fs-5 text-warning"></i> <span class="fw-medium">Rewards</span>
+                </a>
+                <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 px-4 py-3 text-danger border-top mt-auto">
+                    <i class="bi bi-box-arrow-right fs-5"></i> <span class="fw-medium">Logout</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+ 
+    <main class="pt-5 pb-5">
+        <div class="container-fluid px-4">
+            <header class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h1 class="h3 fw-bold mb-1">
+                        <i class="bi bi-star-fill text-warning me-2"></i>Rewards
+                    </h1>
+                    <small class="text-muted">Earn & redeem points from transactions</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary btn-sm px-3" onclick="fetchRewards()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                </div>
+            </header>
+
+            <div class="row g-4">
+                 
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-0 h-100 text-center">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-center mb-3">
+                                <div class="bg-warning bg-opacity-20 p-3 rounded-circle">
+                                    <i class="bi bi-star-fill fs-1 text-warning"></i>
+                                </div>
+                            </div>
+                            <h2 class="display-4 fw-bold balance-lg text-primary mb-1" id="rewardPointsFull">420</h2>
+                            <p class="text-muted mb-2">Total Points</p>
+                            <small class="text-success fw-bold" id="txCount">from 42 transactions</small>
+                        </div>
+                    </div>
+                </div>
+ 
+                <div class="col-md-9">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-light border-0">
+                            <h6 class="mb-0 fw-bold text-uppercase text-muted small">
+                                <i class="bi bi-gift me-2 text-warning"></i>Redeem Vouchers
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3" id="voucherGrid">
+                                <div class="col-md-3">
+                                    <div class="card h-100 border-0 text-center p-4 hover-shadow cursor-pointer voucher-card" onclick="redeemVoucher('stationery', 50)">
+                                        <div class="mb-3">
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 70px; height: 70px;">
+                                                <i class="bi bi-pencil-square fs-2 text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <h6 class="fw-bold mb-1">Stationery Kit</h6>
+                                        <small class="text-muted mb-2 d-block">50 pts</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100 border-0 text-center p-4 hover-shadow cursor-pointer voucher-card" onclick="redeemVoucher('book', 100)">
+                                        <div class="mb-3">
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 70px; height: 70px;">
+                                                <i class="bi bi-book fs-2 text-success"></i>
+                                            </div>
+                                        </div>
+                                        <h6 class="fw-bold mb-1">Book Voucher</h6>
+                                        <small class="text-muted mb-2 d-block">100 pts</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100 border-0 text-center p-4 hover-shadow cursor-pointer voucher-card" onclick="redeemVoucher('school', 150)">
+                                        <div class="mb-3">
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 70px; height: 70px;">
+                                                <i class="bi bi-bag-check fs-2 text-info"></i>
+                                            </div>
+                                        </div>
+                                        <h6 class="fw-bold mb-1">School Supplies</h6>
+                                        <small class="text-muted mb-2 d-block">150 pts</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100 border-0 text-center p-4 hover-shadow cursor-pointer voucher-card" onclick="redeemVoucher('course', 200)">
+                                        <div class="mb-3">
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 70px; height: 70px;">
+                                                <i class="bi bi-laptop fs-2 text-danger"></i>
+                                            </div>
+                                        </div>
+                                        <h6 class="fw-bold mb-1">Online Course</h6>
+                                        <small class="text-muted mb-2 d-block">200 pts</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mt-4" id="voucherMsg" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+ 
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-light border-0">
+                            <h6 class="mb-0 fw-bold text-uppercase text-muted small">
+                                <i class="bi bi-clock-history me-2 text-muted"></i>Rewards History
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th>Points</th>
+                                            <th>Details</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rewardHistory">
+                                        <tr>
+                                            <td>2025-03-15</td>
+                                            <td>Top Up</td>
+                                            <td><span class="badge bg-success">+10</span></td>
+                                            <td>UPI ₹100</td>
+                                            <td class="text-success fw-bold">Earned</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2025-03-14</td>
+                                            <td>Redeem</td>
+                                            <td><span class="badge bg-danger">-50</span></td>
+                                            <td>Stationery Voucher</td>
+                                            <td class="text-danger fw-bold">Redeemed</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.navbar-toggler').on('click', function() {
+                $('.offcanvas').addClass('show');
+            });
+
+            fetchRewards();  
+        });
+
+        function fetchRewards() {
+             
+            const data = {
+                points: 420,
+                transaction_count: 42,
+                history: [
+                    { date: '2025-03-15', type: 'Top Up', points: 10, details: 'UPI ₹100' },
+                    { date: '2025-03-14', type: 'Redeem', points: -50, details: 'Stationery Voucher' }
+                ]
+            };
+            $('#rewardPointsFull').text(data.points);
+            $('#txCount').text(`from ${data.transaction_count} transactions`);
+            
+            const tbody = $('#rewardHistory');
+            tbody.html(data.history.map(r => `
+                <tr>
+                    <td>${r.date}</td>
+                    <td>${r.type}</td>
+                    <td><span class="badge ${r.points > 0 ? 'bg-success' : 'bg-danger'}">${r.points > 0 ? '+' : ''}${r.points}</span></td>
+                    <td>${r.details}</td>
+                    <td class="fw-bold ${r.points > 0 ? 'text-success' : 'text-danger'}">${r.points > 0 ? 'Earned' : 'Redeemed'}</td>
+                </tr>
+            `).join(''));
+        }
+
+        function redeemVoucher(type, points) {
+            const currentPoints = parseInt($('#rewardPointsFull').text());
+            if (currentPoints < points) {
+                $('#voucherMsg').removeClass('alert-info alert-success').addClass('alert-danger')
+                    .text('Insufficient points!').show();
+                return;
+            }
+ 
+            $('#rewardPointsFull').text(currentPoints - points);
+            $('#voucherMsg').removeClass('alert-danger alert-info').addClass('alert-success')
+                .html(`<i class="bi bi-check-circle"></i> Voucher redeemed! Code: <strong>${Math.random().toString(36).substr(2, 8).toUpperCase()}</strong>`).show();
+            
+            setTimeout(() => $('#voucherMsg').fadeOut(), 5000);
+        }
+    </script>
+</body>
+</html>
