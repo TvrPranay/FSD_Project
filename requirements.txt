@@ -3,3 +3,4 @@ flask-sqlalchemy
 qrcode[pil]
 python-dotenv
 Werkzeug
+gunicorn
