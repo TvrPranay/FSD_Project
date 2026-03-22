@@ -251,5 +251,5 @@ def update_profile():
     return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
-    app.run(debug=False, port=5023)
+    app.run()
 
