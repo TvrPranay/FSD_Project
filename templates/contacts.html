@@ -9,7 +9,7 @@
     <link href="/static/css/app.min.css" rel="stylesheet">
 </head>
 <body data-bs-theme="light">
-     
+    <!-- Navbar (shared pattern) -->
     <nav class="navbar navbar-expand-lg fixed-top navbar-light bg-white shadow-sm border-bottom">
         <div class="container-fluid">
             <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
@@ -33,7 +33,7 @@
         </div>
     </nav>
 
-     
+    <!-- Offcanvas Sidebar (shared) -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarLabel">
         <div class="offcanvas-header border-bottom">
             <h5 class="offcanvas-title fw-bold" id="sidebarLabel">Menu</h5>
@@ -65,7 +65,7 @@
         </div>
     </div>
 
-     
+    <!-- Main Content -->
     <main class="pt-5 pb-5" style="margin-left: 0;">
         <div class="container-fluid px-4">
             <header class="d-flex align-items-center justify-content-between mb-4">
@@ -73,7 +73,7 @@
             </header>
 
             <div class="row g-4">
-                
+                <!-- Add Contact Card -->
                 <div class="col-lg-4">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body">
@@ -100,7 +100,7 @@
                     </div>
                 </div>
 
-                 
+                <!-- Contacts List -->
                 <div class="col-lg-8">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-body">
@@ -189,7 +189,7 @@
                     showToast('Please fill both fields', 'error');
                     return;
                 }
-                 
+                // Simulate add
                 showToast(`Contact ${name} (${id}) added!`);
                 $('#newContactId, #newContactName').val('');
             });
@@ -201,7 +201,7 @@
                 showToast('Enter valid amount', 'error');
                 return;
             }
-             
+            // Simulate PIN modal + payment
             showToast(`₹${amount} sent to contact ${id}!`);
         }
     </script>

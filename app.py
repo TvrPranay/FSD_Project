@@ -252,7 +252,4 @@ def update_profile():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5023)
-d e f   p r e d i c t ( ) :   p a s s  
- a p i _ e n d p o i n t   =   ' / p r e d i c t '  
- #   D a s h b o a r d   r o u t e  
- UPI/QR topup routes
+

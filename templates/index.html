@@ -1,1 +1,288 @@
-﻿&lt;main&gt;&lt;section&gt;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID-PAY — Login / Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/app.min.css" rel="stylesheet">
+</head>
+<body class="bg-body-tertiary min-vh-100 d-flex align-items-center justify-content-center p-3">
+    <main class="card shadow-lg border-0" style="max-width: 900px; width: 100%;">
+        <div class="row g-0 h-100">
+            <aside class="col-lg-4 bg-dark text-white d-none d-lg-flex flex-column p-5" style="--bs-bg-opacity: .95;">
+                <header class="mb-auto">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div class="bg-white text-dark rounded-3 p-2 d-flex align-items-center justify-content-center fw-bold fs-6" style="width: 50px; height: 50px;">ID</div>
+                        <span class="fs-3 fw-bold">ID-PAY</span>
+                    </div>
+                </header>
+                
+                <section class="flex-grow-1 d-flex flex-column justify-content-center">
+                    <h2 class="display-5 fw-bold mb-3">Secure payments, simple identity</h2>
+                    <p class="lead opacity-75 mb-4">Pay and verify using your unique barcode ID. Fast, safe, and built for everyone.</p>
+                    <button class="btn btn-outline-light btn-lg px-4 py-2 fw-medium" id="switchBtn">
+                        Create an account →
+                    </button>
+                </section>
+                
+                <footer class="mt-auto pt-4 opacity-50 small">
+                    © 2025 ID-PAY
+                </footer>
+            </aside>
+
+            <!-- Form Area -->
+            <section class="col-lg-8 p-5 p-lg-0">
+                <div class="tab-content h-100 d-flex flex-column p-5" style="min-height: 600px;">
+                    <!-- Login Tab -->
+                    <div class="tab-pane fade show active flex-grow-1" id="login-tab">
+                        <header class="mb-4">
+                            <h2 class="h3 fw-bold mb-1">Welcome back</h2>
+                            <p class="text-muted">Sign in to your account</p>
+                        </header>
+                        
+                        <form id="loginForm" method="POST" action="/login" class="needs-validation flex-grow-1 d-flex flex-column">
+                            <div class="mb-3">
+                                <label for="loginEmail" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="loginEmail" name="email" placeholder="example@gmail.com" required>
+                                <div class="invalid-feedback">Enter a valid email address.</div>
+                            </div>
+
+                            <div class="mb-3 position-relative">
+                                <label for="loginPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="loginPassword" name="password" placeholder="••••••••" required>
+                                <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y text-muted toggle-password" data-target="#loginPassword" style="z-index: 10;">
+                                    👁️
+                                </button>
+                                <div class="invalid-feedback">Password is required.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="loginBarcode" class="form-label">Barcode ID</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="loginBarcode" name="barcode" placeholder="AV.SC.U4AIE23142" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="scanBtnLogin">
+                                        <i class="bi bi-qr-code-scan"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">Barcode ID is required.</div>
+                            </div>
+
+                            <div class="mb-4 position-relative">
+                                <label for="loginPin" class="form-label">4-digit PIN</label>
+                                <input type="password" class="form-control" id="loginPin" name="pin" maxlength="4" placeholder="••••" required>
+                                <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y text-muted toggle-password" data-target="#loginPin" style="z-index: 10;">
+                                    👁️
+                                </button>
+                                <div class="invalid-feedback">Enter a valid 4-digit PIN.</div>
+                            </div>
+
+                            <a href="/forgot" class="text-decoration-none text-muted mb-4 d-block text-end small">Forgot PIN?</a>
+                            
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Sign In</button>
+                            
+                            <div class="text-center">
+                                <small class="text-muted">Don't have an account? </small>
+                                <a href="#" class="text-primary fw-medium" id="showRegister">Register</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Register Tab -->
+                    <div class="tab-pane fade flex-grow-1" id="register-tab">
+                        <header class="mb-4">
+                            <h2 class="h3 fw-bold mb-1">Create account</h2>
+                            <p class="text-muted">Get started with ID-PAY</p>
+                        </header>
+                        
+                        <form id="registerForm" method="POST" action="/register" class="needs-validation flex-grow-1 d-flex flex-column">
+                            <div class="mb-3">
+                                <label for="regName" class="form-label">Full name</label>
+                                <input type="text" class="form-control" id="regName" name="name" placeholder="Pranay" required>
+                                <div class="invalid-feedback">Name is required.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="regEmail" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="regEmail" name="email" placeholder="example@gmail.com" required>
+                                <div class="invalid-feedback">Enter a valid email address.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Phone number</label>
+                                <div class="input-group">
+                                    <select class="form-select form-select-sm" style="max-width: 120px;">
+                                        <option>+91 IN</option>
+                                    </select>
+                                    <input type="tel" class="form-control" id="regMobile" name="mobile" placeholder="10-digit number" maxlength="10" required>
+                                </div>
+                                <div class="invalid-feedback">Enter valid mobile number.</div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6 position-relative">
+                                    <label for="regPassword" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="regPassword" name="password" placeholder="Min. 8 characters" minlength="8" required>
+                                    <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y text-muted toggle-password" data-target="#regPassword">
+                                        👁️
+                                    </button>
+                                    <div class="invalid-feedback">Minimum 8 characters.</div>
+                                </div>
+                                <div class="col-md-6 position-relative">
+                                    <label for="regConfirmPassword" class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control" id="regConfirmPassword" placeholder="Repeat password" required>
+                                    <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y text-muted toggle-password" data-target="#regConfirmPassword">
+                                        👁️
+                                    </button>
+                                    <div class="invalid-feedback">Passwords don't match.</div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6 position-relative">
+                                    <label for="regPin" class="form-label">4-digit PIN</label>
+                                    <input type="password" class="form-control" id="regPin" name="pin" maxlength="4" placeholder="••••" required>
+                                    <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y text-muted toggle-password" data-target="#regPin">
+                                        👁️
+                                    </button>
+                                    <div class="invalid-feedback">4 digits required.</div>
+                                </div>
+                                <div class="col-md-6 position-relative">
+                                    <label for="regConfirmPin" class="form-label">Confirm PIN</label>
+                                    <input type="password" class="form-control" id="regConfirmPin" maxlength="4" placeholder="••••" required>
+                                    <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y text-muted toggle-password" data-target="#regConfirmPin">
+                                        👁️
+                                    </button>
+                                    <div class="invalid-feedback">PINs don't match.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="regBarcode" class="form-label">Barcode ID</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="regBarcode" name="barcode" placeholder="Enter or scan barcode" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="scanBtnReg">
+                                        <i class="bi bi-qr-code-scan"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">Barcode ID required.</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Create Account</button>
+                            
+                            <div class="text-center">
+                                <small class="text-muted">Already have account? </small>
+                                <a href="#" class="text-primary fw-medium" id="showLogin">Sign In</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Scanner Modal -->
+    <div class="modal fade" id="scannerModal" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header border-0">
+                    <h6 class="modal-title">Scan Barcode</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <video id="scannerVideo" class="w-100 rounded border mb-3" autoplay muted playsinline style="max-height: 300px;"></video>
+                    <p class="small text-muted mb-3">Point camera at barcode</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+    <script>
+        let currentTab = 'login';
+        let codeReader = null;
+
+        $('#showRegister, #switchBtn').click(function(e) {
+            e.preventDefault();
+            $('.tab-pane').removeClass('show active');
+            $('#register-tab').addClass('show active');
+            $('#switchBtn').text('Have account? Sign in');
+            currentTab = 'register';
+        });
+
+        $('#showLogin').click(function(e) {
+            e.preventDefault();
+            $('.tab-pane').removeClass('show active');
+            $('#login-tab').addClass('show active');
+            $('#switchBtn').text('Create an account →');
+            currentTab = 'login';
+        });
+
+        // Scanner
+        $('#scanBtnLogin, #scanBtnReg').click(function() {
+            const targetId = $(this).prev().attr('id');
+            $('#scannerModal').modal('show');
+            
+            codeReader = new ZXing.BrowserMultiFormatReader();
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(stream => {
+                const video = document.getElementById('scannerVideo');
+                video.srcObject = stream;
+                video.play();
+                
+                codeReader.decodeFromVideoDevice(stream, video, (result, err) => {
+                    if (result) {
+                        $(`#${targetId}`).val(result.getText()).addClass('is-valid');
+                        $('#scannerModal').modal('hide');
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                });
+            });
+        });
+
+        $('#scannerModal').on('hidden.bs.modal', function() {
+            if (codeReader) codeReader.reset();
+            const video = document.getElementById('scannerVideo');
+            if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
+        });
+
+        // Form validation
+        $('#loginForm, #registerForm').on('submit', function(e) {
+            let form = $(this);
+            form.removeClass('was-validated');
+            
+            // Trigger browser validation
+            if (!form[0].checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            form.addClass('was-validated');
+            
+            // Custom validation
+            if (currentTab === 'register') {
+                const password = $('#regPassword').val();
+                const confirmPassword = $('#regConfirmPassword').val();
+                if (password !== confirmPassword) {
+                    $('#regConfirmPassword').addClass('is-invalid');
+                    e.preventDefault();
+                }
+                
+                const pin = $('#regPin').val();
+                const confirmPin = $('#regConfirmPin').val();
+                if (pin.length !== 4 || pin !== confirmPin) {
+                    $('#regConfirmPin').addClass('is-invalid');
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // PIN input formatting
+        $('[name="pin"]').on('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0,4);
+        });
+    </script>
+</body>
+</html>

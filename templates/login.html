@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ID-PAY — Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/app.min.css" rel="stylesheet">
+</head>
+<body class="bg-body-tertiary min-vh-100 d-flex align-items-center justify-content-center p-4">
+    <main class="card shadow border-0 p-4 p-md-5" style="max-width: 450px;">
+        <header class="text-center mb-4">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-3 p-2 rounded-3 bg-primary bg-opacity-10 mx-auto" style="width: 70px;">
+                <i class="bi bi-credit-card text-primary fs-4"></i>
+            </div>
+            <h1 class="h3 fw-bold mb-2">Welcome back</h1>
+            <p class="text-muted mb-0">Sign in to your ID-PAY account</p>
+        </header>
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <form id="loginForm" method="POST" action="/login" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label for="email" class="form-label fw-medium">Email</label>
+                <input type="email" class="form-control form-control-lg" id="email" name="email" required>
+                <div class="invalid-feedback">Please enter a valid email.</div>
+            </div>
+
+            <div class="mb-3 position-relative">
+                <label for="password" class="form-label fw-medium">Password</label>
+                <input type="password" class="form-control form-control-lg" id="password" name="password" required>
+<button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y pe-4 toggle-password" data-target="#password" tabindex="-1">
+                    <i class="bi bi-eye"></i>
+                </button>
+                <div class="invalid-feedback">Password is required.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="barcode" class="form-label fw-medium">Barcode ID</label>
+                <div class="input-group input-group-lg">
+                    <input type="text" class="form-control" id="barcode" name="barcode" placeholder="Enter barcode ID" required>
+                    <button class="btn btn-outline-secondary" type="button" id="scanBtn">
+                        <i class="bi bi-qr-code-scan"></i>
+                    </button>
+                </div>
+                <div class="invalid-feedback">Barcode ID is required.</div>
+            </div>
+
+            <div class="mb-4 position-relative">
+                <label for="pin" class="form-label fw-medium">4-digit PIN</label>
+                <input type="password" class="form-control form-control-lg" id="pin" name="pin" maxlength="4" placeholder="••••" required>
+                <button type="button" class="btn btn-link p-0 position-absolute top-50 end-0 translate-middle-y pe-4 toggle-password" data-target="#pin">
+                    <i class="bi bi-eye"></i>
+                </button>
+                <div class="invalid-feedback">Enter 4-digit PIN.</div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a href="/forgot" class="btn btn-link p-0 text-decoration-none text-muted small">Forgot PIN?</a>
+                <a href="/index" class="btn btn-link p-0 text-decoration-none fw-medium">Register →</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+            </button>
+        </form>
+
+        <!-- Scanner Modal (Simplified) -->
+        <div class="modal fade" id="scannerModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-0 bg-light">
+                        <h6 class="modal-title fw-bold">Scan Barcode</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <video id="scannerVideo" class="w-100 rounded mb-3 shadow-sm" style="max-height: 250px;" autoplay muted playsinline></video>
+                        <div class="position-relative">
+                            <div class="position-absolute top-50 start-50 translate-middle w-75 h-50 border border-3 border-success border-opacity-75 rounded-3" style="box-shadow: 0 0 0 1000px rgba(0,0,0,0.6);"></div>
+                        </div>
+                        <p class="text-muted small mt-2">Point at barcode in green frame</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+    <script>
+        let codeReader = null;
+
+        // Enhanced validation + PIN formatting
+        $('#loginForm').on('submit', function(e) {
+            const form = $(this)[0];
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            $(this).addClass('was-validated');
+            
+            const pin = $('#pin').val();
+            if (!/^\d{4}$/.test(pin)) {
+                $('#pin').addClass('is-invalid').next('.invalid-feedback').text('4-digit PIN required');
+                e.preventDefault();
+            }
+        });
+
+        $('#pin').on('input', function() {
+            this.value = this.value.replace(/[^\d]/g, '').slice(0,4);
+        });
+
+        // Scanner
+        $('#scanBtn').click(() => {
+            $('#scannerModal').modal('show');
+            codeReader = new ZXing.BrowserMultiFormatReader();
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(stream => {
+                const video = $('#scannerVideo')[0];
+                video.srcObject = stream;
+                video.play();
+                
+                codeReader.decodeFromVideoDevice(stream, video, (result, err) => {
+                    if (result) {
+                        $('#barcode').val(result.getText()).addClass('is-valid');
+                        $('#scannerModal').modal('hide');
+                        stream.getTracks().forEach(t => t.stop());
+                        codeReader.reset();
+                    }
+                }).catch(() => {});
+            }).catch(err => {
+                console.error('Scanner error:', err);
+                $('#scannerModal').modal('hide');
+            });
+        });
+
+        $('#scannerModal').on('hidden.bs.modal', function() {
+            if (codeReader) codeReader.reset();
+            const video = $('#scannerVideo')[0];
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+        });
+    </script>
+</body>
+</html>
